@@ -4,7 +4,16 @@ export interface PlatformConfig {
   width: number;
   height: number;
   color: string;
-  icon: string;
+}
+
+export type VerticalAlignment = 'top' | 'middle' | 'bottom';
+
+export interface TextShadow {
+  enabled: boolean;
+  color: string;
+  blur: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 export interface TextLayer {
@@ -13,25 +22,48 @@ export interface TextLayer {
   fontFamily: string;
   fontSize: number;
   color: string;
-  strokeColor: string;
-  strokeWidth: number;
+  backgroundColor: string;
+  showBackground: boolean;
+  padding: number;
+  borderRadius: number;
   isBold: boolean;
   isItalic: boolean;
-  x: number;
-  y: number;
+  verticalAlign: VerticalAlignment;
+  distanceFromEdge: number;
+  shadow: TextShadow;
 }
 
-export interface ImageState {
-  image: HTMLImageElement | null;
-  imageX: number;
-  imageY: number;
-  zoom: number;
+export interface TextStyle {
+  id: string;
+  name: string;
+  fontFamily: string;
+  fontSize: number;
+  color: string;
+  backgroundColor: string;
+  showBackground: boolean;
+  padding: number;
+  borderRadius: number;
+  isBold: boolean;
+  isItalic: boolean;
+  shadow: TextShadow;
 }
 
+export const DEFAULT_SHADOW: TextShadow = {
+  enabled: false,
+  color: '#000000',
+  blur: 4,
+  offsetX: 2,
+  offsetY: 2,
+};
+
+// Official recommended sizes:
+// Facebook feed: 1080×1080 (1:1) or 1080×1350 (4:5)
+// Instagram feed: 1080px width, 628-1350px height
+// LinkedIn post: 1200×627 recommended for optimal display
 export const DEFAULT_PLATFORMS: PlatformConfig[] = [
-  { id: 'instagram', name: 'Instagram', width: 1080, height: 1080, color: '#e1306c', icon: '📸' },
-  { id: 'facebook', name: 'Facebook', width: 1200, height: 630, color: '#1877f2', icon: '📘' },
-  { id: 'linkedin', name: 'LinkedIn', width: 1200, height: 627, color: '#0a66c2', icon: '💼' },
+  { id: 'facebook', name: 'Facebook', width: 1080, height: 1080, color: '#1877f2' },
+  { id: 'instagram', name: 'Instagram', width: 1080, height: 1350, color: '#e1306c' },
+  { id: 'linkedin', name: 'LinkedIn', width: 1200, height: 627, color: '#0a66c2' },
 ];
 
 export const FONT_OPTIONS = [
@@ -39,8 +71,11 @@ export const FONT_OPTIONS = [
   'Roboto',
   'Open Sans',
   'Montserrat',
+  'Futura',
   'Playfair Display',
   'Arial',
   'Georgia',
   'Times New Roman',
 ];
+
+export const STORAGE_KEY = 'social-media-canva-config';
