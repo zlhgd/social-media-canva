@@ -158,7 +158,7 @@ export default function CanvasEditor({
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          🖼️ Éditeur - Déplacez et redimensionnez l&apos;image
+          🖼️ Éditeur - Déplacez et redimensionnez l{"'"}image
         </Typography>
 
         <Box

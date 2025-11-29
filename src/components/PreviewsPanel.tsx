@@ -197,56 +197,71 @@ export default function PreviewsPanel({
   imageY,
   zoom,
 }: PreviewsPanelProps) {
-  const handleDownloadAll = () => {
-    platforms.forEach((platform, index) => {
-      setTimeout(() => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+  const generateCanvasForPlatform = (platform: PlatformConfig): HTMLCanvasElement => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get canvas context');
 
-        canvas.width = platform.width;
-        canvas.height = platform.height;
+    canvas.width = platform.width;
+    canvas.height = platform.height;
 
-        ctx.fillStyle = '#2d2d2d';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#2d2d2d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const scale = zoom / 100;
-        const imgWidth = image.width * scale;
-        const imgHeight = image.height * scale;
-        const imgX = (canvas.width / 2) + imageX - (imgWidth / 2);
-        const imgY = (canvas.height / 2) + imageY - (imgHeight / 2);
+    const scale = zoom / 100;
+    const imgWidth = image.width * scale;
+    const imgHeight = image.height * scale;
+    const imgX = (canvas.width / 2) + imageX - (imgWidth / 2);
+    const imgY = (canvas.height / 2) + imageY - (imgHeight / 2);
 
-        ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
+    ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-        textLayers.forEach(layer => {
-          let fontStyle = '';
-          if (layer.isItalic) fontStyle += 'italic ';
-          if (layer.isBold) fontStyle += 'bold ';
-          
-          ctx.font = `${fontStyle}${layer.fontSize}px "${layer.fontFamily}"`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
+    textLayers.forEach(layer => {
+      let fontStyle = '';
+      if (layer.isItalic) fontStyle += 'italic ';
+      if (layer.isBold) fontStyle += 'bold ';
+      
+      ctx.font = `${fontStyle}${layer.fontSize}px "${layer.fontFamily}"`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
 
-          const x = canvas.width / 2 + layer.x;
-          const y = canvas.height / 2 + layer.y;
+      const x = canvas.width / 2 + layer.x;
+      const y = canvas.height / 2 + layer.y;
 
-          if (layer.strokeWidth > 0) {
-            ctx.strokeStyle = layer.strokeColor;
-            ctx.lineWidth = layer.strokeWidth;
-            ctx.lineJoin = 'round';
-            ctx.strokeText(layer.text, x, y);
-          }
+      if (layer.strokeWidth > 0) {
+        ctx.strokeStyle = layer.strokeColor;
+        ctx.lineWidth = layer.strokeWidth;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(layer.text, x, y);
+      }
 
-          ctx.fillStyle = layer.color;
-          ctx.fillText(layer.text, x, y);
-        });
-
-        const link = document.createElement('a');
-        link.download = `${platform.id}-${platform.width}x${platform.height}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }, index * 500);
+      ctx.fillStyle = layer.color;
+      ctx.fillText(layer.text, x, y);
     });
+
+    return canvas;
+  };
+
+  const downloadCanvas = (canvas: HTMLCanvasElement, filename: string): Promise<void> => {
+    return new Promise((resolve) => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      // Small delay to ensure download starts before next one
+      setTimeout(resolve, 100);
+    });
+  };
+
+  const handleDownloadAll = async () => {
+    for (const platform of platforms) {
+      try {
+        const canvas = generateCanvasForPlatform(platform);
+        await downloadCanvas(canvas, `${platform.id}-${platform.width}x${platform.height}.png`);
+      } catch (error) {
+        console.error(`Failed to download ${platform.name}:`, error);
+      }
+    }
   };
 
   return (
