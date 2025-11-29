@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { Box, Card, CardContent, Typography, Slider, Button, Stack } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { PlatformConfig, TextLayer } from '@/types';
+import { drawRoundedRect } from '@/lib/canvas-utils';
 
 interface CanvasEditorProps {
   image: HTMLImageElement;
@@ -16,29 +17,6 @@ interface CanvasEditorProps {
   onZoomChange: (zoom: number) => void;
   onReset: () => void;
   onTextLayerPositionChange?: (layerId: number, x: number, y: number) => void;
-}
-
-// Helper function to draw rounded rectangle
-function drawRoundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-  ctx.fill();
 }
 
 export default function CanvasEditor({
