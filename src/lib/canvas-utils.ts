@@ -85,31 +85,21 @@ export function drawTextLayer(
   const bgWidth = textWidth + padding * 2;
   const bgHeight = textHeight + padding * 2;
 
-  // Save context state for shadow
+  // Save context state
   ctx.save();
 
-  // Apply shadow if enabled
+  // Draw background with rounded corners (no shadow on background)
+  if (layer.showBackground && layer.backgroundColor && layer.backgroundColor !== 'transparent') {
+    ctx.fillStyle = layer.backgroundColor;
+    drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
+  }
+
+  // Apply shadow to text only
   if (layer.shadow?.enabled) {
     ctx.shadowColor = layer.shadow.color;
     ctx.shadowBlur = layer.shadow.blur * scale;
     ctx.shadowOffsetX = layer.shadow.offsetX * scale;
     ctx.shadowOffsetY = layer.shadow.offsetY * scale;
-  }
-
-  // Draw background with rounded corners
-  if (layer.backgroundColor && layer.backgroundColor !== 'transparent') {
-    ctx.fillStyle = layer.backgroundColor;
-    drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
-  }
-
-  // Reset shadow for text (unless we want shadow on text too)
-  if (layer.shadow?.enabled && !layer.backgroundColor) {
-    // Keep shadow for text if no background
-  } else {
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
   }
 
   // Draw text

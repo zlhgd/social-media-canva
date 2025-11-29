@@ -131,23 +131,23 @@ export default function Home() {
           <Grid container spacing={1}>
             {/* Left Column - Editor */}
             <Grid size={{ xs: 12, lg: 5 }}>
-              <Stack spacing={1}>
+              <Stack spacing={0.75}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Button
                     variant="outlined"
                     size="small"
-                    startIcon={<SettingsIcon />}
+                    startIcon={<SettingsIcon sx={{ fontSize: 16 }} />}
                     onClick={() => setPlatformDialogOpen(true)}
-                    sx={{ borderRadius: 1 }}
+                    sx={{ borderRadius: 0.5, textTransform: 'none', fontSize: '0.75rem', py: 0.25 }}
                   >
                     Plateformes
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
-                    startIcon={<RefreshIcon />}
+                    startIcon={<RefreshIcon sx={{ fontSize: 16 }} />}
                     onClick={handleNewImage}
-                    sx={{ borderRadius: 1 }}
+                    sx={{ borderRadius: 0.5, textTransform: 'none', fontSize: '0.75rem', py: 0.25 }}
                   >
                     Nouvelle image
                   </Button>
@@ -200,10 +200,10 @@ export default function Home() {
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, fontSize: '0.9rem' }}>
             Configuration des plateformes
             <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
-              <CloseIcon />
+              <CloseIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </DialogTitle>
           <DialogContent sx={{ pt: 1 }}>

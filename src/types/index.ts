@@ -23,6 +23,7 @@ export interface TextLayer {
   fontSize: number;
   color: string;
   backgroundColor: string;
+  showBackground: boolean;
   padding: number;
   borderRadius: number;
   isBold: boolean;
@@ -39,6 +40,7 @@ export interface TextStyle {
   fontSize: number;
   color: string;
   backgroundColor: string;
+  showBackground: boolean;
   padding: number;
   borderRadius: number;
   isBold: boolean;

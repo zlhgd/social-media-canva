@@ -31,7 +31,6 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import SaveIcon from '@mui/icons-material/Save';
@@ -63,6 +62,7 @@ export default function TextControls({
   const [fontSize, setFontSize] = useState(48);
   const [color, setColor] = useState('#ffffff');
   const [backgroundColor, setBackgroundColor] = useState('#000000');
+  const [showBackground, setShowBackground] = useState(true);
   const [padding, setPadding] = useState(10);
   const [borderRadius, setBorderRadius] = useState(4);
   const [styles, setStyles] = useState<string[]>([]);
@@ -93,6 +93,7 @@ export default function TextControls({
     fontSize,
     color,
     backgroundColor,
+    showBackground,
     padding,
     borderRadius,
     isBold: styles.includes('bold'),
@@ -100,18 +101,28 @@ export default function TextControls({
     verticalAlign,
     distanceFromEdge,
     shadow: createShadow(),
-  }), [text, fontFamily, fontSize, color, backgroundColor, padding, borderRadius, styles, verticalAlign, distanceFromEdge, createShadow]);
+  }), [text, fontFamily, fontSize, color, backgroundColor, showBackground, padding, borderRadius, styles, verticalAlign, distanceFromEdge, createShadow]);
 
-  // Send preview updates in real-time
+  // Real-time update when editing existing layer
   useEffect(() => {
-    if (onPreviewChange) {
+    if (editingLayerId !== null && text.trim()) {
+      onUpdateLayer(editingLayerId, createLayerData());
+    }
+  }, [editingLayerId, text, fontFamily, fontSize, color, backgroundColor, showBackground, padding, borderRadius, styles, verticalAlign, distanceFromEdge, shadowEnabled, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY, createLayerData, onUpdateLayer]);
+
+  // Send preview updates for new text (not editing)
+  useEffect(() => {
+    if (onPreviewChange && editingLayerId === null) {
       onPreviewChange(text.trim() ? createLayerData() : null);
     }
-  }, [text, createLayerData, onPreviewChange]);
+  }, [editingLayerId, text, createLayerData, onPreviewChange]);
 
   const resetForm = () => {
     setText('');
     setEditingLayerId(null);
+    if (onPreviewChange) {
+      onPreviewChange(null);
+    }
   };
 
   const loadLayerForEdit = (layer: TextLayer) => {
@@ -120,6 +131,7 @@ export default function TextControls({
     setFontSize(layer.fontSize);
     setColor(layer.color);
     setBackgroundColor(layer.backgroundColor);
+    setShowBackground(layer.showBackground ?? true);
     setPadding(layer.padding);
     setBorderRadius(layer.borderRadius);
     setStyles([...(layer.isBold ? ['bold'] : []), ...(layer.isItalic ? ['italic'] : [])]);
@@ -131,16 +143,14 @@ export default function TextControls({
     setShadowOffsetX(layer.shadow.offsetX);
     setShadowOffsetY(layer.shadow.offsetY);
     setEditingLayerId(layer.id);
+    if (onPreviewChange) {
+      onPreviewChange(null);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleAddNew = () => {
     if (!text.trim()) return;
-
-    if (editingLayerId !== null) {
-      onUpdateLayer(editingLayerId, createLayerData());
-    } else {
-      onAddLayer(createLayerData());
-    }
+    onAddLayer(createLayerData());
     resetForm();
   };
 
@@ -156,6 +166,7 @@ export default function TextControls({
       fontSize,
       color,
       backgroundColor,
+      showBackground,
       padding,
       borderRadius,
       isBold: styles.includes('bold'),
@@ -171,6 +182,7 @@ export default function TextControls({
     setFontSize(style.fontSize);
     setColor(style.color);
     setBackgroundColor(style.backgroundColor);
+    setShowBackground(style.showBackground ?? true);
     setPadding(style.padding);
     setBorderRadius(style.borderRadius);
     setStyles([...(style.isBold ? ['bold'] : []), ...(style.isItalic ? ['italic'] : [])]);
@@ -183,110 +195,244 @@ export default function TextControls({
     }
   };
 
+  const inputStyle = { 
+    '& .MuiOutlinedInput-root': { borderRadius: 0.5 },
+    '& .MuiInputLabel-root': { fontSize: '0.75rem' },
+  };
+
   return (
-    <Card sx={{ borderRadius: 1 }}>
-      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-          Texte {editingLayerId !== null && '(édition)'}
+    <Card sx={{ borderRadius: 0.5 }}>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
+        <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          Texte {editingLayerId !== null && <span style={{ fontWeight: 400, color: '#666' }}>(modification en cours)</span>}
         </Typography>
 
         {textStyles.length > 0 && (
-          <Box sx={{ mb: 1 }}>
+          <Box sx={{ mb: 0.5 }}>
             <Stack direction="row" spacing={0.5} flexWrap="wrap">
               {textStyles.map((style) => (
-                <Chip key={style.id} label={style.name} onClick={() => applyStyle(style)} onDelete={() => onDeleteStyle(style.id)} size="small" sx={{ mb: 0.5, borderRadius: 1 }} />
+                <Chip key={style.id} label={style.name} onClick={() => applyStyle(style)} onDelete={() => onDeleteStyle(style.id)} size="small" sx={{ mb: 0.5, borderRadius: 0.5, height: 22 }} />
               ))}
             </Stack>
           </Box>
         )}
 
-        <Stack spacing={1}>
+        <Stack spacing={0.75}>
+          {/* Text input */}
           <TextField
             fullWidth
             size="small"
-            placeholder="Texte..."
+            placeholder="Saisissez votre texte..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             inputProps={{ maxLength: 200 }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+            sx={inputStyle}
           />
 
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 90 }}>
-              <InputLabel>Police</InputLabel>
-              <Select value={fontFamily} label="Police" onChange={(e) => setFontFamily(e.target.value)} sx={{ borderRadius: 1 }}>
+          {/* Row 1: Font, size, colors, bold/italic */}
+          <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel sx={{ fontSize: '0.75rem' }}>Police</InputLabel>
+              <Select value={fontFamily} label="Police" onChange={(e) => setFontFamily(e.target.value)} sx={{ borderRadius: 0.5 }}>
                 {FONT_OPTIONS.map((font) => (
                   <MenuItem key={font} value={font} style={{ fontFamily: font }}>{font}</MenuItem>
                 ))}
               </Select>
             </FormControl>
 
-            <TextField type="number" size="small" label="Taille" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value) || 48)} inputProps={{ min: 12, max: 200 }} sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
-            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 28, height: 28, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer' }} title="Couleur" />
-            <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} style={{ width: 28, height: 28, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer' }} title="Fond" />
+            <TextField 
+              type="number" 
+              size="small" 
+              label="Taille" 
+              value={fontSize} 
+              onChange={(e) => setFontSize(parseInt(e.target.value) || 48)} 
+              inputProps={{ min: 12, max: 200, step: 1 }} 
+              sx={{ width: 70, ...inputStyle }} 
+            />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#666' }}>Texte</Typography>
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer', padding: 0 }} />
+            </Box>
+
             <ToggleButtonGroup value={styles} onChange={handleStyleChange} size="small">
-              <ToggleButton value="bold" sx={{ borderRadius: 1, px: 0.5 }}><FormatBoldIcon fontSize="small" /></ToggleButton>
-              <ToggleButton value="italic" sx={{ borderRadius: 1, px: 0.5 }}><FormatItalicIcon fontSize="small" /></ToggleButton>
+              <ToggleButton value="bold" sx={{ borderRadius: 0.5, px: 0.5, py: 0.25 }}><FormatBoldIcon sx={{ fontSize: 16 }} /></ToggleButton>
+              <ToggleButton value="italic" sx={{ borderRadius: 0.5, px: 0.5, py: 0.25 }}><FormatItalicIcon sx={{ fontSize: 16 }} /></ToggleButton>
             </ToggleButtonGroup>
           </Stack>
 
+          {/* Row 2: Background settings */}
           <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-            <FormControl size="small" sx={{ minWidth: 80 }}>
-              <InputLabel>Align</InputLabel>
-              <Select value={verticalAlign} label="Align" onChange={(e) => setVerticalAlign(e.target.value as VerticalAlignment)} sx={{ borderRadius: 1 }}>
-                <MenuItem value="top">Haut</MenuItem>
-                <MenuItem value="middle">Milieu</MenuItem>
-                <MenuItem value="bottom">Bas</MenuItem>
-              </Select>
-            </FormControl>
-            {verticalAlign !== 'middle' && (
-              <TextField type="number" size="small" label="Dist." value={distanceFromEdge} onChange={(e) => setDistanceFromEdge(parseInt(e.target.value) || 0)} inputProps={{ min: 0, max: 500 }} sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
-            )}
-            <TextField type="number" size="small" label="Pad" value={padding} onChange={(e) => setPadding(parseInt(e.target.value) || 0)} inputProps={{ min: 0, max: 50 }} sx={{ width: 60, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
-            <TextField type="number" size="small" label="Rad" value={borderRadius} onChange={(e) => setBorderRadius(parseInt(e.target.value) || 0)} inputProps={{ min: 0, max: 50 }} sx={{ width: 60, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
-          </Stack>
-
-          {/* Shadow controls - always visible */}
-          <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-            <FormControlLabel control={<Switch checked={shadowEnabled} onChange={(e) => setShadowEnabled(e.target.checked)} size="small" />} label="Ombre" sx={{ mr: 0.5, '& .MuiTypography-root': { fontSize: '0.75rem' } }} />
-            {shadowEnabled && (
+            <FormControlLabel 
+              control={<Switch checked={showBackground} onChange={(e) => setShowBackground(e.target.checked)} size="small" />} 
+              label="Fond" 
+              sx={{ mr: 0.5, '& .MuiTypography-root': { fontSize: '0.7rem' }, '& .MuiSwitch-root': { mr: 0.5 } }} 
+            />
+            {showBackground && (
               <>
-                <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer' }} />
-                <TextField type="number" size="small" label="Flou" value={shadowBlur} onChange={(e) => setShadowBlur(parseInt(e.target.value) || 0)} inputProps={{ min: 0, max: 50 }} sx={{ width: 55, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
-                <TextField type="number" size="small" label="X" value={shadowOffsetX} onChange={(e) => setShadowOffsetX(parseInt(e.target.value) || 0)} inputProps={{ min: -50, max: 50 }} sx={{ width: 50, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
-                <TextField type="number" size="small" label="Y" value={shadowOffsetY} onChange={(e) => setShadowOffsetY(parseInt(e.target.value) || 0)} inputProps={{ min: -50, max: 50 }} sx={{ width: 50, '& .MuiOutlinedInput-root': { borderRadius: 1 } }} />
+                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer', padding: 0 }} />
+                <TextField 
+                  type="number" 
+                  size="small" 
+                  label="Marge" 
+                  value={padding} 
+                  onChange={(e) => setPadding(parseInt(e.target.value) || 0)} 
+                  inputProps={{ min: 0, max: 50, step: 1 }} 
+                  sx={{ width: 65, ...inputStyle }} 
+                />
+                <TextField 
+                  type="number" 
+                  size="small" 
+                  label="Arrondi" 
+                  value={borderRadius} 
+                  onChange={(e) => setBorderRadius(parseInt(e.target.value) || 0)} 
+                  inputProps={{ min: 0, max: 50, step: 1 }} 
+                  sx={{ width: 65, ...inputStyle }} 
+                />
               </>
             )}
           </Stack>
 
-          <Stack direction="row" spacing={0.5}>
-            <Button variant="contained" size="small" startIcon={editingLayerId !== null ? <EditIcon /> : <AddIcon />} onClick={handleSubmit} disabled={!text.trim()} sx={{ borderRadius: 1, textTransform: 'none' }}>
-              {editingLayerId !== null ? 'Modifier' : 'Ajouter'}
-            </Button>
-            {editingLayerId !== null && (
-              <Button variant="outlined" size="small" onClick={resetForm} sx={{ borderRadius: 1, textTransform: 'none' }}>Annuler</Button>
+          {/* Row 3: Alignment settings */}
+          <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
+            <FormControl size="small" sx={{ minWidth: 85 }}>
+              <InputLabel sx={{ fontSize: '0.75rem' }}>Position</InputLabel>
+              <Select value={verticalAlign} label="Position" onChange={(e) => setVerticalAlign(e.target.value as VerticalAlignment)} sx={{ borderRadius: 0.5 }}>
+                <MenuItem value="top">Haut</MenuItem>
+                <MenuItem value="middle">Centre</MenuItem>
+                <MenuItem value="bottom">Bas</MenuItem>
+              </Select>
+            </FormControl>
+            {verticalAlign !== 'middle' && (
+              <TextField 
+                type="number" 
+                size="small" 
+                label="Distance" 
+                value={distanceFromEdge} 
+                onChange={(e) => setDistanceFromEdge(parseInt(e.target.value) || 0)} 
+                inputProps={{ min: 0, max: 500, step: 10 }} 
+                sx={{ width: 80, ...inputStyle }} 
+              />
             )}
-            <Button variant="outlined" size="small" startIcon={<SaveIcon />} onClick={() => setSaveStyleDialogOpen(true)} sx={{ borderRadius: 1, textTransform: 'none' }}>Style</Button>
+          </Stack>
+
+          {/* Row 4: Shadow settings - always visible */}
+          <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
+            <FormControlLabel 
+              control={<Switch checked={shadowEnabled} onChange={(e) => setShadowEnabled(e.target.checked)} size="small" />} 
+              label="Ombre" 
+              sx={{ mr: 0.5, '& .MuiTypography-root': { fontSize: '0.7rem' }, '& .MuiSwitch-root': { mr: 0.5 } }} 
+            />
+            {shadowEnabled && (
+              <>
+                <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer', padding: 0 }} />
+                <TextField 
+                  type="number" 
+                  size="small" 
+                  label="Flou" 
+                  value={shadowBlur} 
+                  onChange={(e) => setShadowBlur(parseInt(e.target.value) || 0)} 
+                  inputProps={{ min: 0, max: 50, step: 1 }} 
+                  sx={{ width: 55, ...inputStyle }} 
+                />
+                <TextField 
+                  type="number" 
+                  size="small" 
+                  label="X" 
+                  value={shadowOffsetX} 
+                  onChange={(e) => setShadowOffsetX(parseInt(e.target.value) || 0)} 
+                  inputProps={{ min: -50, max: 50, step: 1 }} 
+                  sx={{ width: 50, ...inputStyle }} 
+                />
+                <TextField 
+                  type="number" 
+                  size="small" 
+                  label="Y" 
+                  value={shadowOffsetY} 
+                  onChange={(e) => setShadowOffsetY(parseInt(e.target.value) || 0)} 
+                  inputProps={{ min: -50, max: 50, step: 1 }} 
+                  sx={{ width: 50, ...inputStyle }} 
+                />
+              </>
+            )}
+          </Stack>
+
+          {/* Row 5: Buttons */}
+          <Stack direction="row" spacing={0.5}>
+            {editingLayerId === null ? (
+              <Button 
+                variant="contained" 
+                size="small" 
+                startIcon={<AddIcon sx={{ fontSize: 16 }} />} 
+                onClick={handleAddNew} 
+                disabled={!text.trim()} 
+                sx={{ borderRadius: 0.5, textTransform: 'none', py: 0.25, fontSize: '0.75rem' }}
+              >
+                Ajouter
+              </Button>
+            ) : (
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={resetForm} 
+                sx={{ borderRadius: 0.5, textTransform: 'none', py: 0.25, fontSize: '0.75rem' }}
+              >
+                Nouveau calque
+              </Button>
+            )}
+            <Button 
+              variant="outlined" 
+              size="small" 
+              startIcon={<SaveIcon sx={{ fontSize: 16 }} />} 
+              onClick={() => setSaveStyleDialogOpen(true)} 
+              sx={{ borderRadius: 0.5, textTransform: 'none', py: 0.25, fontSize: '0.75rem' }}
+            >
+              Style
+            </Button>
           </Stack>
         </Stack>
 
+        {/* Layer list */}
         {textLayers.length > 0 && (
           <>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="caption" color="text.secondary">Calques ({textLayers.length}):</Typography>
-            <List dense disablePadding>
+            <Divider sx={{ my: 0.75 }} />
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Calques ({textLayers.length}):</Typography>
+            <List dense disablePadding sx={{ mt: 0.25 }}>
               {textLayers.map((layer) => (
-                <ListItem key={layer.id} sx={{ backgroundColor: 'grey.100', borderRadius: 0.5, mb: 0.5, py: 0.25, px: 1 }}>
+                <ListItem 
+                  key={layer.id} 
+                  onClick={() => loadLayerForEdit(layer)}
+                  sx={{ 
+                    backgroundColor: editingLayerId === layer.id ? 'primary.light' : 'grey.100', 
+                    borderRadius: 0.5, 
+                    mb: 0.25, 
+                    py: 0.25, 
+                    px: 1,
+                    cursor: 'pointer',
+                    '&:hover': { backgroundColor: editingLayerId === layer.id ? 'primary.light' : 'grey.200' }
+                  }}
+                >
                   <ListItemText
                     primary={layer.text}
-                    secondary={`${layer.fontFamily} ${layer.fontSize}px`}
-                    primaryTypographyProps={{ style: { fontFamily: layer.fontFamily, fontWeight: layer.isBold ? 700 : 400, fontStyle: layer.isItalic ? 'italic' : 'normal' }, noWrap: true, variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
+                    secondary={`${layer.fontFamily} ${layer.fontSize}px - ${layer.verticalAlign === 'top' ? 'Haut' : layer.verticalAlign === 'bottom' ? 'Bas' : 'Centre'}`}
+                    primaryTypographyProps={{ 
+                      style: { fontFamily: layer.fontFamily, fontWeight: layer.isBold ? 700 : 400, fontStyle: layer.isItalic ? 'italic' : 'normal' }, 
+                      noWrap: true, 
+                      variant: 'body2',
+                      sx: { fontSize: '0.8rem' }
+                    }}
+                    secondaryTypographyProps={{ variant: 'caption', sx: { fontSize: '0.65rem' } }}
                   />
                   <ListItemSecondaryAction>
-                    <IconButton edge="end" size="small" onClick={() => loadLayerForEdit(layer)} sx={{ mr: 0.5 }}><EditIcon fontSize="small" /></IconButton>
-                    <IconButton edge="end" size="small" onClick={() => onDeleteLayer(layer.id)} color="error"><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton 
+                      edge="end" 
+                      size="small" 
+                      onClick={(e) => { e.stopPropagation(); onDeleteLayer(layer.id); if (editingLayerId === layer.id) resetForm(); }} 
+                      color="error"
+                      sx={{ p: 0.25 }}
+                    >
+                      <DeleteIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
               ))}
@@ -295,9 +441,9 @@ export default function TextControls({
         )}
 
         <Dialog open={saveStyleDialogOpen} onClose={() => setSaveStyleDialogOpen(false)} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ py: 1 }}>Sauvegarder le style</DialogTitle>
+          <DialogTitle sx={{ py: 1, fontSize: '0.9rem' }}>Sauvegarder le style</DialogTitle>
           <DialogContent sx={{ py: 1 }}>
-            <TextField autoFocus fullWidth size="small" label="Nom du style" value={styleName} onChange={(e) => setStyleName(e.target.value)} sx={{ mt: 1 }} />
+            <TextField autoFocus fullWidth size="small" label="Nom du style" value={styleName} onChange={(e) => setStyleName(e.target.value)} sx={{ mt: 1, ...inputStyle }} />
           </DialogContent>
           <DialogActions sx={{ py: 1 }}>
             <Button onClick={() => setSaveStyleDialogOpen(false)} size="small">Annuler</Button>
