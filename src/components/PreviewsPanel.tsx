@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback } from 'react';
-import { Box, Card, CardContent, Typography, Button, Grid } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, Stack } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { PlatformConfig, TextLayer } from '@/types';
-import { drawTextLayer } from '@/lib/canvas-utils';
+import { drawTextLayer, doesImageCoverCanvas } from '@/lib/canvas-utils';
 
 interface PreviewsPanelProps {
   image: HTMLImageElement;
@@ -13,6 +13,7 @@ interface PreviewsPanelProps {
   imageX: number;
   imageY: number;
   zoom: number;
+  averageColor: string;
 }
 
 function PlatformPreview({
@@ -22,6 +23,7 @@ function PlatformPreview({
   imageX,
   imageY,
   zoom,
+  averageColor,
 }: {
   platform: PlatformConfig;
   image: HTMLImageElement;
@@ -29,6 +31,7 @@ function PlatformPreview({
   imageX: number;
   imageY: number;
   zoom: number;
+  averageColor: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -40,7 +43,7 @@ function PlatformPreview({
     if (!ctx) return;
 
     // Preview scale for display
-    const maxPreviewSize = 300;
+    const maxPreviewSize = 250;
     const previewScale = Math.min(
       maxPreviewSize / platform.width,
       maxPreviewSize / platform.height
@@ -49,8 +52,9 @@ function PlatformPreview({
     canvas.width = platform.width * previewScale;
     canvas.height = platform.height * previewScale;
 
-    // Clear canvas
-    ctx.fillStyle = '#2d2d2d';
+    // Use average color as background if image doesn't cover
+    const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
+    ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Calculate image position and size
@@ -64,9 +68,9 @@ function PlatformPreview({
 
     // Draw text layers with background
     textLayers.forEach(layer => {
-      drawTextLayer(ctx, layer, canvas.width / 2, canvas.height / 2, previewScale);
+      drawTextLayer(ctx, layer, canvas.width, canvas.height, previewScale);
     });
-  }, [image, platform, textLayers, imageX, imageY, zoom]);
+  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor]);
 
   useEffect(() => {
     render();
@@ -82,8 +86,9 @@ function PlatformPreview({
     canvas.width = platform.width;
     canvas.height = platform.height;
 
-    // Draw background
-    ctx.fillStyle = '#2d2d2d';
+    // Use average color as background if image doesn't cover
+    const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
+    ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Calculate image position and size
@@ -97,7 +102,7 @@ function PlatformPreview({
 
     // Draw text layers at full resolution with background
     textLayers.forEach(layer => {
-      drawTextLayer(ctx, layer, canvas.width / 2, canvas.height / 2, 1);
+      drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
 
     // Download
@@ -108,38 +113,37 @@ function PlatformPreview({
   };
 
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent sx={{ textAlign: 'center' }}>
-        <Typography variant="h6" gutterBottom sx={{ color: platform.color }}>
+    <Card variant="outlined" sx={{ height: '100%' }}>
+      <CardContent sx={{ textAlign: 'center', p: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ color: platform.color, mb: 0.5 }}>
           {platform.icon} {platform.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
           {platform.width} × {platform.height}
         </Typography>
         <Box
           sx={{
-            backgroundColor: '#1e293b',
-            borderRadius: 2,
-            p: 2,
+            backgroundColor: '#f5f5f5',
+            borderRadius: 1,
+            p: 1,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            minHeight: 200,
-            mb: 2,
+            mb: 1,
           }}
         >
           <canvas
             ref={canvasRef}
             style={{
               maxWidth: '100%',
-              maxHeight: 250,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              maxHeight: 200,
             }}
           />
         </Box>
         <Button
           variant="contained"
           color="success"
+          size="small"
           startIcon={<DownloadIcon />}
           onClick={handleDownload}
           fullWidth
@@ -158,6 +162,7 @@ export default function PreviewsPanel({
   imageX,
   imageY,
   zoom,
+  averageColor,
 }: PreviewsPanelProps) {
   const generateCanvasForPlatform = (platform: PlatformConfig): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
@@ -167,7 +172,8 @@ export default function PreviewsPanel({
     canvas.width = platform.width;
     canvas.height = platform.height;
 
-    ctx.fillStyle = '#2d2d2d';
+    const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
+    ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const scale = zoom / 100;
@@ -180,7 +186,7 @@ export default function PreviewsPanel({
 
     // Draw text layers with background
     textLayers.forEach(layer => {
-      drawTextLayer(ctx, layer, canvas.width / 2, canvas.height / 2, 1);
+      drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
 
     return canvas;
@@ -192,7 +198,6 @@ export default function PreviewsPanel({
       link.download = filename;
       link.href = canvas.toDataURL('image/png');
       link.click();
-      // Small delay to ensure download starts before next one
       setTimeout(resolve, 100);
     });
   };
@@ -209,36 +214,34 @@ export default function PreviewsPanel({
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          👀 Aperçus par plateforme
+    <Card sx={{ height: '100%' }}>
+      <CardContent sx={{ p: 2 }}>
+        <Typography variant="subtitle1" gutterBottom fontWeight={600}>
+          👀 Aperçus
         </Typography>
 
-        <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Stack spacing={2}>
           {platforms.map((platform) => (
-            <Grid size={{ xs: 12, md: 4 }} key={platform.id}>
-              <PlatformPreview
-                platform={platform}
-                image={image}
-                textLayers={textLayers}
-                imageX={imageX}
-                imageY={imageY}
-                zoom={zoom}
-              />
-            </Grid>
+            <PlatformPreview
+              key={platform.id}
+              platform={platform}
+              image={image}
+              textLayers={textLayers}
+              imageX={imageX}
+              imageY={imageY}
+              zoom={zoom}
+              averageColor={averageColor}
+            />
           ))}
-        </Grid>
+        </Stack>
 
-        <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Button
             variant="contained"
-            size="large"
             startIcon={<DownloadIcon />}
             onClick={handleDownloadAll}
-            sx={{ px: 4, py: 1.5 }}
           >
-            Télécharger tous les formats
+            Tout télécharger
           </Button>
         </Box>
       </CardContent>
