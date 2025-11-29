@@ -1,5 +1,8 @@
 import { TextLayer, PlatformConfig } from '@/types';
 
+// Constants for text rendering
+const LINE_HEIGHT_MULTIPLIER = 1.2;
+
 /**
  * Draw a rounded rectangle on a canvas context
  */
@@ -62,7 +65,7 @@ export function drawTextLayer(
   const fontSize = layer.fontSize * scale;
   const padding = layer.padding * scale;
   const borderRadius = layer.borderRadius * scale;
-  const lineHeight = fontSize * 1.2;
+  const lineHeight = fontSize * LINE_HEIGHT_MULTIPLIER;
   
   let fontStyle = '';
   if (layer.isItalic) fontStyle += 'italic ';

@@ -38,6 +38,7 @@ import { TextLayer, TextStyle, FONT_OPTIONS, VerticalAlignment } from '@/types';
 
 // Constants
 const DISTANCE_STEP = 10;
+const MAX_TEXT_LENGTH = 500;
 
 interface TextControlsProps {
   textLayers: TextLayer[];
@@ -227,7 +228,7 @@ export default function TextControls({
             placeholder="Saisissez votre texte..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            inputProps={{ maxLength: 500 }}
+            inputProps={{ maxLength: MAX_TEXT_LENGTH }}
             multiline
             minRows={1}
             maxRows={4}

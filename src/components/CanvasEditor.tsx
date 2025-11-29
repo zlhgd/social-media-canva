@@ -42,6 +42,10 @@ interface ResizeState {
 const ZOOM_SENSITIVITY = 0.3;
 const MIN_ZOOM = 10;
 const MAX_ZOOM = 500;
+const HANDLE_SIZE = 10; // Visual size of resize handles
+const HANDLE_HIT_AREA = 15; // Hit detection area (slightly larger for easier interaction)
+const MAX_DISPLAY_WIDTH = 600;
+const MAX_DISPLAY_HEIGHT = 500;
 
 export default function CanvasEditor({
   image,
@@ -67,11 +71,8 @@ export default function CanvasEditor({
   
   // Calculate the canvas display scale to fit in viewport
   const displayScale = useMemo(() => {
-    // Target max display size
-    const maxDisplayWidth = 600;
-    const maxDisplayHeight = 500;
-    const scaleX = maxDisplayWidth / maxWidth;
-    const scaleY = maxDisplayHeight / maxHeight;
+    const scaleX = MAX_DISPLAY_WIDTH / maxWidth;
+    const scaleY = MAX_DISPLAY_HEIGHT / maxHeight;
     return Math.min(scaleX, scaleY, 1);
   }, [maxWidth, maxHeight]);
 
@@ -173,7 +174,6 @@ export default function CanvasEditor({
     });
 
     // Draw resize handles
-    const handleSize = 10;
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#333333';
     ctx.lineWidth = 1.5;
@@ -187,7 +187,7 @@ export default function CanvasEditor({
 
     handles.forEach((handle) => {
       ctx.beginPath();
-      ctx.rect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
+      ctx.rect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
       ctx.fill();
       ctx.stroke();
     });
@@ -221,7 +221,7 @@ export default function CanvasEditor({
     const imgPosX = (maxWidth / 2) + imageX - (imgWidth / 2);
     const imgPosY = (maxHeight / 2) + imageY - (imgHeight / 2);
 
-    const handleSize = 15; // Hit detection radius
+    // HANDLE_HIT_AREA is larger than HANDLE_SIZE for easier interaction
     const handles: { pos: ResizeHandle; x: number; y: number }[] = [
       { pos: 'nw', x: imgPosX, y: imgPosY },
       { pos: 'ne', x: imgPosX + imgWidth, y: imgPosY },
@@ -230,7 +230,7 @@ export default function CanvasEditor({
     ];
 
     for (const handle of handles) {
-      if (Math.abs(canvasX - handle.x) < handleSize && Math.abs(canvasY - handle.y) < handleSize) {
+      if (Math.abs(canvasX - handle.x) < HANDLE_HIT_AREA && Math.abs(canvasY - handle.y) < HANDLE_HIT_AREA) {
         return handle.pos;
       }
     }
@@ -284,7 +284,11 @@ export default function CanvasEditor({
       const deltaX = canvasPos.x - resizeStart.x;
       const deltaY = canvasPos.y - resizeStart.y;
       
-      // Calculate diagonal distance for zoom based on which corner is being dragged
+      // Calculate zoom delta based on handle direction:
+      // - SE corner: moving right+down increases size (positive diagonal)
+      // - NW corner: moving left+up increases size (negative diagonal)
+      // - NE corner: moving right increases, moving down decreases (X positive, Y negative)
+      // - SW corner: moving left decreases, moving down increases (X negative, Y positive)
       let delta = 0;
       if (activeHandle === 'se') delta = (deltaX + deltaY) / 2;
       else if (activeHandle === 'nw') delta = -(deltaX + deltaY) / 2;
@@ -299,8 +303,7 @@ export default function CanvasEditor({
         // Resize from center - just update zoom, keep position
         onZoomChange(newZoom);
       } else {
-        // Keep the OPPOSITE corner fixed
-        // Calculate where the opposite corner is in the original state
+        // Anchor the opposite corner (keep it fixed while resizing)
         const oldScale = resizeStart.zoom / 100;
         const newScale = newZoom / 100;
         
@@ -309,45 +312,44 @@ export default function CanvasEditor({
         const newImgWidth = image.width * newScale;
         const newImgHeight = image.height * newScale;
         
-        // Get opposite corner position (fixed point)
+        // Calculate the position of the fixed (opposite) corner in original coordinates
+        // Each handle has a diagonally opposite corner that stays anchored
         let fixedX: number, fixedY: number;
         if (activeHandle === 'nw') {
-          // Fixed point is SE corner
+          // Dragging NW -> SE corner stays fixed
           fixedX = resizeStart.handleX + oldImgWidth;
           fixedY = resizeStart.handleY + oldImgHeight;
         } else if (activeHandle === 'ne') {
-          // Fixed point is SW corner
+          // Dragging NE -> SW corner stays fixed
           fixedX = resizeStart.handleX - oldImgWidth;
           fixedY = resizeStart.handleY + oldImgHeight;
         } else if (activeHandle === 'sw') {
-          // Fixed point is NE corner
+          // Dragging SW -> NE corner stays fixed
           fixedX = resizeStart.handleX + oldImgWidth;
           fixedY = resizeStart.handleY - oldImgHeight;
         } else {
-          // Fixed point is NW corner (SE handle)
+          // Dragging SE -> NW corner stays fixed
           fixedX = resizeStart.handleX - oldImgWidth;
           fixedY = resizeStart.handleY - oldImgHeight;
         }
         
-        // Calculate where the image center should be to keep the fixed point in place
-        // Fixed point position relative to new image
+        // Calculate the new image center position so that the fixed corner stays in place
+        // The image center is calculated from the fixed corner + half the new image dimensions
         let newImgX: number, newImgY: number;
         if (activeHandle === 'nw') {
-          // New NW corner should be at (fixedX - newImgWidth, fixedY - newImgHeight)
-          // Image center = NW corner + (width/2, height/2)
-          newImgX = (fixedX - newImgWidth + newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY - newImgHeight + newImgHeight/2) - maxHeight/2;
+          // NW moves, SE stays -> image center is SE corner - half dimensions
+          newImgX = (fixedX - newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY - newImgHeight/2) - maxHeight/2;
         } else if (activeHandle === 'ne') {
-          // New NE corner X = fixedX + newImgWidth, Y = fixedY - newImgHeight
-          newImgX = (fixedX + newImgWidth - newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY - newImgHeight + newImgHeight/2) - maxHeight/2;
+          // NE moves, SW stays -> image center is SW corner + (width/2, -height/2)
+          newImgX = (fixedX + newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY - newImgHeight/2) - maxHeight/2;
         } else if (activeHandle === 'sw') {
-          // New SW corner X = fixedX - newImgWidth, Y = fixedY + newImgHeight
-          newImgX = (fixedX - newImgWidth + newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY + newImgHeight - newImgHeight/2) - maxHeight/2;
+          // SW moves, NE stays -> image center is NE corner + (-width/2, height/2)
+          newImgX = (fixedX - newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY + newImgHeight/2) - maxHeight/2;
         } else {
-          // SE handle - NW corner is fixed
-          // New center = fixed point + (newImgWidth/2, newImgHeight/2)
+          // SE moves, NW stays -> image center is NW corner + half dimensions
           newImgX = (fixedX + newImgWidth/2) - maxWidth/2;
           newImgY = (fixedY + newImgHeight/2) - maxHeight/2;
         }
