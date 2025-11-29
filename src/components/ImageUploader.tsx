@@ -10,8 +10,6 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
-  const [isDragOver, setIsDragOver] = React.useState(false);
-
   const loadImage = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -27,19 +25,16 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
     
     const files = e.dataTransfer.files;
     if (files.length > 0 && files[0].type.startsWith('image/')) {
@@ -83,21 +78,12 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       sx={{
-        border: '3px dashed',
-        borderColor: isDragOver ? 'primary.main' : 'grey.300',
-        borderRadius: 4,
         p: 8,
         textAlign: 'center',
-        bgcolor: isDragOver ? 'primary.light' : 'background.paper',
         cursor: 'pointer',
-        transition: (theme) => theme.transitions.create(['border-color', 'background-color']),
-        '&:hover': {
-          borderColor: 'primary.main',
-          bgcolor: 'primary.light',
-        },
       }}
     >
-      <CloudUploadIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+      <CloudUploadIcon sx={{ mb: 2 }} />
       
       <Typography variant="h6" gutterBottom>
         Glissez-déposez une image ici
@@ -123,8 +109,8 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
       </Button>
       
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
-        <ContentPasteIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-        <Typography variant="body2" color="text.secondary">
+        <ContentPasteIcon />
+        <Typography variant="body2">
           Vous pouvez aussi coller une image (Ctrl+V)
         </Typography>
       </Box>

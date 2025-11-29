@@ -24,7 +24,7 @@ export default function PlatformConfigPanel({ platforms, onPlatformChange }: Pla
     <Stack spacing={0.75}>
       {platforms.map((platform) => (
         <Box key={platform.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <Typography sx={{ minWidth: 80, color: platform.color, fontWeight: 500, fontSize: '0.8rem' }}>
+          <Typography sx={{ minWidth: 80 }}>
             {platform.name}
           </Typography>
           <TextField
@@ -34,9 +34,9 @@ export default function PlatformConfigPanel({ platforms, onPlatformChange }: Pla
             value={platform.width}
             onChange={(e) => handleDimensionChange(platform.id, 'width', e.target.value)}
             inputProps={{ min: 100, max: 4000, step: 10 }}
-            sx={{ width: 90, '& .MuiOutlinedInput-root': { borderRadius: 0.5 }, '& .MuiInputLabel-root': { fontSize: '0.7rem' } }}
+            sx={{ width: 90 }}
           />
-          <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>×</Typography>
+          <Typography variant="body2">×</Typography>
           <TextField
             type="number"
             size="small"
@@ -44,7 +44,7 @@ export default function PlatformConfigPanel({ platforms, onPlatformChange }: Pla
             value={platform.height}
             onChange={(e) => handleDimensionChange(platform.id, 'height', e.target.value)}
             inputProps={{ min: 100, max: 4000, step: 10 }}
-            sx={{ width: 90, '& .MuiOutlinedInput-root': { borderRadius: 0.5 }, '& .MuiInputLabel-root': { fontSize: '0.7rem' } }}
+            sx={{ width: 90 }}
           />
         </Box>
       ))}

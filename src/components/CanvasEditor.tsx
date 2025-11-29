@@ -97,10 +97,6 @@ export default function CanvasEditor({
   const maxDisplayWidth = Math.max(...normalizedFrames.map(f => f.displayWidth));
   const maxDisplayHeight = Math.max(...normalizedFrames.map(f => f.displayHeight));
 
-  // Get the max original dimensions for calculations
-  const maxWidth = Math.max(...platforms.map(p => p.width));
-  const maxHeight = Math.max(...platforms.map(p => p.height));
-
   const handleCoverMode = useCallback(() => {
     if (!image) return;
     const maxExportWidth = Math.max(...exportDimensions.map(d => d.width));
@@ -109,17 +105,6 @@ export default function CanvasEditor({
     const scaleY = maxExportHeight / image.height;
     const coverZoom = Math.max(scaleX, scaleY) * 100;
     onZoomChange(coverZoom);
-    onPositionChange(0, 0);
-  }, [image, exportDimensions, onZoomChange, onPositionChange]);
-
-  const handleFitMode = useCallback(() => {
-    if (!image) return;
-    const minExportWidth = Math.min(...exportDimensions.map(d => d.width));
-    const minExportHeight = Math.min(...exportDimensions.map(d => d.height));
-    const scaleX = minExportWidth / image.width;
-    const scaleY = minExportHeight / image.height;
-    const fitZoom = Math.min(scaleX, scaleY) * 100;
-    onZoomChange(fitZoom);
     onPositionChange(0, 0);
   }, [image, exportDimensions, onZoomChange, onPositionChange]);
 
@@ -216,7 +201,7 @@ export default function CanvasEditor({
       ctx.fill();
       ctx.stroke();
     });
-  }, [image, normalizedFrames, imageX, imageY, zoom, averageColor, maxDisplayWidth, maxDisplayHeight, HANDLE_SIZE]);
+  }, [image, normalizedFrames, imageX, imageY, zoom, averageColor, maxDisplayWidth, maxDisplayHeight]);
 
   useEffect(() => {
     render();
@@ -288,7 +273,7 @@ export default function CanvasEditor({
       case 'se': return { x: imgPosX + imgWidth, y: imgPosY + imgHeight };
       default: return { x: 0, y: 0 };
     }
-  }, [image, imageX, imageY, zoom, maxDisplayWidth, maxDisplayHeight, imageDisplayScale]);
+  }, [image, imageX, imageY, zoom, imageDisplayScale]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const canvasPos = getCanvasCoords(e.clientX, e.clientY);
@@ -464,27 +449,26 @@ export default function CanvasEditor({
   }, []);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack spacing={1}>
-          {/* Control buttons */}
           <Stack direction="row" spacing={1} justifyContent="center">
-            <ButtonGroup size="small" variant="outlined">
+            <ButtonGroup size="small">
               <Tooltip title="Réinitialiser">
                 <Button onClick={handleCoverMode}>
-                  <CropFreeIcon fontSize="small" />
+                  <CropFreeIcon />
                 </Button>
               </Tooltip>
             </ButtonGroup>
-            <ButtonGroup size="small" variant="outlined">
+            <ButtonGroup size="small">
               <Tooltip title="Centrer horizontalement">
                 <Button onClick={handleCenterH}>
-                  <AlignHorizontalCenterIcon fontSize="small" />
+                  <AlignHorizontalCenterIcon />
                 </Button>
               </Tooltip>
               <Tooltip title="Centrer verticalement">
                 <Button onClick={handleCenterV}>
-                  <AlignVerticalCenterIcon fontSize="small" />
+                  <AlignVerticalCenterIcon />
                 </Button>
               </Tooltip>
             </ButtonGroup>
@@ -493,8 +477,6 @@ export default function CanvasEditor({
           <Box
             ref={containerRef}
             sx={{
-              bgcolor: 'grey.200',
-              borderRadius: 1,
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',

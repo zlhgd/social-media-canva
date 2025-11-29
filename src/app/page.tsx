@@ -22,38 +22,38 @@ import PreviewsPanel from '@/components/PreviewsPanel';
 import { PlatformConfig, TextLayer, TextStyle, DEFAULT_PLATFORMS, STORAGE_KEY } from '@/types';
 import { getAverageColor } from '@/lib/canvas-utils';
 
+function loadFromLocalStorage() {
+  if (typeof window === 'undefined') return { platforms: DEFAULT_PLATFORMS, textStyles: [] };
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        platforms: parsed.platforms || DEFAULT_PLATFORMS,
+        textStyles: parsed.textStyles || [],
+      };
+    }
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+  }
+  return { platforms: DEFAULT_PLATFORMS, textStyles: [] };
+}
+
 export default function Home() {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [platforms, setPlatforms] = useState<PlatformConfig[]>(DEFAULT_PLATFORMS);
+  const [platforms, setPlatforms] = useState<PlatformConfig[]>(() => loadFromLocalStorage().platforms);
   const [imageX, setImageX] = useState(0);
   const [imageY, setImageY] = useState(0);
   const [zoom, setZoom] = useState(100);
   const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
-  const [textStyles, setTextStyles] = useState<TextStyle[]>([]);
+  const [textStyles, setTextStyles] = useState<TextStyle[]>(() => loadFromLocalStorage().textStyles);
   const [textIdCounter, setTextIdCounter] = useState(0);
   const [averageColor, setAverageColor] = useState('#808080');
   const [platformDialogOpen, setPlatformDialogOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const [previewText, setPreviewText] = useState<Omit<TextLayer, 'id'> | null>(null);
 
-  // Mark as client-side and load from localStorage
   useEffect(() => {
-    setIsClient(true);
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.platforms) setPlatforms(parsed.platforms);
-        if (parsed.textStyles) setTextStyles(parsed.textStyles);
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-    }
-  }, []);
-
-  // Save only config (platforms and text styles) to localStorage
-  useEffect(() => {
-    if (!isClient) return;
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         platforms,
@@ -62,7 +62,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
-  }, [platforms, textStyles, isClient]);
+  }, [platforms, textStyles]);
 
   const handleImageLoad = useCallback((img: HTMLImageElement) => {
     setImage(img);
@@ -125,18 +125,16 @@ export default function Home() {
   }, []);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', p: 1 }}>
+    <Box sx={{ minHeight: '100vh', p: 1 }}>
       <Container maxWidth="xl" disableGutters>
         {!image ? (
           <ImageUploader onImageLoad={handleImageLoad} />
         ) : (
           <Box sx={{ display: 'flex', gap: 1 }}>
-            {/* Left Column - Editor (takes remaining space) */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack spacing={1}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Button
-                    variant="outlined"
                     size="small"
                     startIcon={<SettingsIcon />}
                     onClick={() => setPlatformDialogOpen(true)}
@@ -144,7 +142,6 @@ export default function Home() {
                     Plateformes
                   </Button>
                   <Button
-                    variant="outlined"
                     size="small"
                     startIcon={<RefreshIcon />}
                     onClick={handleNewImage}
@@ -177,8 +174,7 @@ export default function Home() {
               </Stack>
             </Box>
 
-            {/* Right Column - Previews (fixed 360px width) */}
-            <Box sx={{ width: 360, flexShrink: 0 }}>
+            <Box>
               <PreviewsPanel
                 image={image}
                 platforms={platforms}
@@ -193,7 +189,6 @@ export default function Home() {
           </Box>
         )}
 
-        {/* Platform Configuration Dialog */}
         <Dialog
           open={platformDialogOpen}
           onClose={() => setPlatformDialogOpen(false)}

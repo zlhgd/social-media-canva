@@ -199,29 +199,24 @@ export default function TextControls({
     }
   };
 
-  const inputStyle = { 
-    '& .MuiOutlinedInput-root': { borderRadius: 1 },
-  };
-
   return (
-    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
-        <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-          Texte {editingLayerId !== null && <Typography component="span" variant="body2" color="text.secondary">(modification en cours)</Typography>}
+        <Typography variant="body2" sx={{ mb: 0.5 }}>
+          Texte {editingLayerId !== null && <Typography component="span" variant="body2">(modification en cours)</Typography>}
         </Typography>
 
         {textStyles.length > 0 && (
           <Box sx={{ mb: 0.5 }}>
             <Stack direction="row" spacing={0.5} flexWrap="wrap">
               {textStyles.map((style) => (
-                <Chip key={style.id} label={style.name} onClick={() => applyStyle(style)} onDelete={() => onDeleteStyle(style.id)} size="small" sx={{ mb: 0.5, borderRadius: 1, height: 24 }} />
+                <Chip key={style.id} label={style.name} onClick={() => applyStyle(style)} onDelete={() => onDeleteStyle(style.id)} size="small" sx={{ mb: 0.5 }} />
               ))}
             </Stack>
           </Box>
         )}
 
         <Stack spacing={0.75}>
-          {/* Text input - multiline */}
           <TextField
             fullWidth
             size="small"
@@ -232,14 +227,12 @@ export default function TextControls({
             multiline
             minRows={1}
             maxRows={4}
-            sx={inputStyle}
           />
 
-          {/* Row 1: Font, size, colors, bold/italic */}
-          <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-            <FormControl size="small" sx={{ minWidth: 100 }}>
-              <InputLabel sx={{ fontSize: '0.75rem' }}>Police</InputLabel>
-              <Select value={fontFamily} label="Police" onChange={(e) => setFontFamily(e.target.value)} sx={{ borderRadius: 0.5 }}>
+          <Stack direction="row">
+            <FormControl>
+              <InputLabel>Police</InputLabel>
+              <Select value={fontFamily} label="Police" onChange={(e) => setFontFamily(e.target.value)}>
                 {FONT_OPTIONS.map((font) => (
                   <MenuItem key={font} value={font} style={{ fontFamily: font }}>{font}</MenuItem>
                 ))}
@@ -253,30 +246,29 @@ export default function TextControls({
               value={fontSize} 
               onChange={(e) => setFontSize(parseInt(e.target.value) || 48)} 
               inputProps={{ min: 12, max: 200, step: 1 }} 
-              sx={{ width: 70, ...inputStyle }} 
+              sx={{ width: 70 }} 
             />
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>Texte</Typography>
-              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+              <Typography variant="caption">Texte</Typography>
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
             </Box>
 
             <ToggleButtonGroup value={styles} onChange={handleStyleChange} size="small">
-              <ToggleButton value="bold" sx={{ borderRadius: 0.5, px: 0.5, py: 0.25 }}><FormatBoldIcon sx={{ fontSize: 16 }} /></ToggleButton>
-              <ToggleButton value="italic" sx={{ borderRadius: 0.5, px: 0.5, py: 0.25 }}><FormatItalicIcon sx={{ fontSize: 16 }} /></ToggleButton>
+              <ToggleButton value="bold"><FormatBoldIcon /></ToggleButton>
+              <ToggleButton value="italic"><FormatItalicIcon /></ToggleButton>
             </ToggleButtonGroup>
           </Stack>
 
-          {/* Row 2: Background settings */}
           <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
             <FormControlLabel 
               control={<Switch checked={showBackground} onChange={(e) => setShowBackground(e.target.checked)} size="small" />} 
               label="Fond" 
-              sx={{ mr: 0.5, '& .MuiTypography-root': { fontSize: '0.7rem' }, '& .MuiSwitch-root': { mr: 0.5 } }} 
+              sx={{ mr: 0.5 }} 
             />
             {showBackground && (
               <>
-                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
                 <TextField 
                   type="number" 
                   size="small" 
@@ -284,7 +276,7 @@ export default function TextControls({
                   value={padding} 
                   onChange={(e) => setPadding(parseInt(e.target.value) || 0)} 
                   inputProps={{ min: 0, max: 50, step: 1 }} 
-                  sx={{ width: 65, ...inputStyle }} 
+                  sx={{ width: 65 }} 
                 />
                 <TextField 
                   type="number" 
@@ -293,17 +285,16 @@ export default function TextControls({
                   value={borderRadius} 
                   onChange={(e) => setBorderRadius(parseInt(e.target.value) || 0)} 
                   inputProps={{ min: 0, max: 50, step: 1 }} 
-                  sx={{ width: 65, ...inputStyle }} 
+                  sx={{ width: 65 }} 
                 />
               </>
             )}
           </Stack>
 
-          {/* Row 3: Alignment settings */}
           <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
             <FormControl size="small" sx={{ minWidth: 85 }}>
-              <InputLabel sx={{ fontSize: '0.75rem' }}>Position</InputLabel>
-              <Select value={verticalAlign} label="Position" onChange={(e) => setVerticalAlign(e.target.value as VerticalAlignment)} sx={{ borderRadius: 0.5 }}>
+              <InputLabel>Position</InputLabel>
+              <Select value={verticalAlign} label="Position" onChange={(e) => setVerticalAlign(e.target.value as VerticalAlignment)}>
                 <MenuItem value="top">Haut</MenuItem>
                 <MenuItem value="middle">Centre</MenuItem>
                 <MenuItem value="bottom">Bas</MenuItem>
@@ -317,21 +308,20 @@ export default function TextControls({
                 value={distanceFromEdge} 
                 onChange={(e) => setDistanceFromEdge(parseInt(e.target.value) || 0)} 
                 inputProps={{ min: 0, max: 500, step: DISTANCE_STEP }} 
-                sx={{ width: 80, ...inputStyle }} 
+                sx={{ width: 80 }} 
               />
             )}
           </Stack>
 
-          {/* Row 4: Shadow settings - always visible */}
           <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
             <FormControlLabel 
               control={<Switch checked={shadowEnabled} onChange={(e) => setShadowEnabled(e.target.checked)} size="small" />} 
               label="Ombre" 
-              sx={{ mr: 0.5, '& .MuiTypography-root': { fontSize: '0.7rem' }, '& .MuiSwitch-root': { mr: 0.5 } }} 
+              sx={{ mr: 0.5 }} 
             />
             {shadowEnabled && (
               <>
-                <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+                <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} />
                 <TextField 
                   type="number" 
                   size="small" 
@@ -339,7 +329,7 @@ export default function TextControls({
                   value={shadowBlur} 
                   onChange={(e) => setShadowBlur(parseInt(e.target.value) || 0)} 
                   inputProps={{ min: 0, max: 50, step: 1 }} 
-                  sx={{ width: 55, ...inputStyle }} 
+                  sx={{ width: 55 }} 
                 />
                 <TextField 
                   type="number" 
@@ -348,7 +338,7 @@ export default function TextControls({
                   value={shadowOffsetX} 
                   onChange={(e) => setShadowOffsetX(parseInt(e.target.value) || 0)} 
                   inputProps={{ min: -50, max: 50, step: 1 }} 
-                  sx={{ width: 50, ...inputStyle }} 
+                  sx={{ width: 50 }} 
                 />
                 <TextField 
                   type="number" 
@@ -357,13 +347,12 @@ export default function TextControls({
                   value={shadowOffsetY} 
                   onChange={(e) => setShadowOffsetY(parseInt(e.target.value) || 0)} 
                   inputProps={{ min: -50, max: 50, step: 1 }} 
-                  sx={{ width: 50, ...inputStyle }} 
+                  sx={{ width: 50 }} 
                 />
               </>
             )}
           </Stack>
 
-          {/* Row 5: Buttons */}
           <Stack direction="row" spacing={1}>
             {editingLayerId === null ? (
               <Button 
@@ -377,7 +366,6 @@ export default function TextControls({
               </Button>
             ) : (
               <Button 
-                variant="outlined" 
                 size="small" 
                 onClick={resetForm}
               >
@@ -385,7 +373,6 @@ export default function TextControls({
               </Button>
             )}
             <Button 
-              variant="outlined" 
               size="small" 
               startIcon={<SaveIcon />} 
               onClick={() => setSaveStyleDialogOpen(true)}
@@ -399,20 +386,17 @@ export default function TextControls({
         {textLayers.length > 0 && (
           <>
             <Divider sx={{ my: 0.75 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Calques ({textLayers.length}):</Typography>
+            <Typography variant="caption">Calques ({textLayers.length}):</Typography>
             <List dense disablePadding sx={{ mt: 0.25 }}>
               {textLayers.map((layer) => (
                 <ListItem 
                   key={layer.id} 
                   onClick={() => loadLayerForEdit(layer)}
                   sx={{ 
-                    bgcolor: editingLayerId === layer.id ? 'primary.light' : 'grey.100', 
-                    borderRadius: 0.5, 
                     mb: 0.25, 
                     py: 0.25, 
                     px: 1,
                     cursor: 'pointer',
-                    '&:hover': { bgcolor: editingLayerId === layer.id ? 'primary.light' : 'grey.200' }
                   }}
                 >
                   <ListItemText
@@ -422,9 +406,8 @@ export default function TextControls({
                       style: { fontFamily: layer.fontFamily, fontWeight: layer.isBold ? 700 : 400, fontStyle: layer.isItalic ? 'italic' : 'normal' }, 
                       noWrap: true, 
                       variant: 'body2',
-                      sx: { fontSize: '0.8rem' }
                     }}
-                    secondaryTypographyProps={{ variant: 'caption', sx: { fontSize: '0.65rem' } }}
+                    secondaryTypographyProps={{ variant: 'caption' }}
                   />
                   <ListItemSecondaryAction>
                     <IconButton 
@@ -434,7 +417,7 @@ export default function TextControls({
                       color="error"
                       sx={{ p: 0.25 }}
                     >
-                      <DeleteIcon sx={{ fontSize: 16 }} />
+                      <DeleteIcon />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
@@ -444,9 +427,9 @@ export default function TextControls({
         )}
 
         <Dialog open={saveStyleDialogOpen} onClose={() => setSaveStyleDialogOpen(false)} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ py: 1, fontSize: '0.9rem' }}>Sauvegarder le style</DialogTitle>
+          <DialogTitle sx={{ py: 1 }}>Sauvegarder le style</DialogTitle>
           <DialogContent sx={{ py: 1 }}>
-            <TextField autoFocus fullWidth size="small" label="Nom du style" value={styleName} onChange={(e) => setStyleName(e.target.value)} sx={{ mt: 1, ...inputStyle }} />
+            <TextField autoFocus fullWidth size="small" label="Nom du style" value={styleName} onChange={(e) => setStyleName(e.target.value)} sx={{ mt: 1 }} />
           </DialogContent>
           <DialogActions sx={{ py: 1 }}>
             <Button onClick={() => setSaveStyleDialogOpen(false)} size="small">Annuler</Button>

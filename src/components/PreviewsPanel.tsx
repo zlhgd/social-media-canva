@@ -131,14 +131,14 @@ function PlatformPreview({
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+    <Card variant="outlined">
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
           <Box>
-            <Typography variant="body2" sx={{ color: platform.color, fontWeight: 600 }}>
+            <Typography variant="body2">
               {platform.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption">
               {platform.width}×{platform.height}
             </Typography>
           </Box>
@@ -146,13 +146,13 @@ function PlatformPreview({
             variant="contained" 
             color="success" 
             size="small" 
-            startIcon={<DownloadIcon fontSize="small" />} 
+            startIcon={<DownloadIcon />} 
             onClick={handleDownload}
           >
             Télécharger
           </Button>
         </Stack>
-        <Box sx={{ bgcolor: 'grey.200', borderRadius: 1, p: 0.5, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'center' }}>
           <canvas ref={canvasRef} style={{ display: 'block', maxWidth: '100%', height: 'auto' }} />
         </Box>
       </CardContent>
@@ -228,11 +228,11 @@ export default function PreviewsPanel({
     <Card variant="outlined" sx={{ borderRadius: 1 }}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant="body2" fontWeight={600}>Aperçus</Typography>
+          <Typography variant="body2">Aperçus</Typography>
           <Button 
             variant="contained" 
             size="small" 
-            startIcon={<DownloadIcon fontSize="small" />} 
+            startIcon={<DownloadIcon />} 
             onClick={handleDownloadAll}
           >
             Tout télécharger
