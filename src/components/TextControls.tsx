@@ -36,6 +36,9 @@ import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import SaveIcon from '@mui/icons-material/Save';
 import { TextLayer, TextStyle, FONT_OPTIONS, VerticalAlignment } from '@/types';
 
+// Constants
+const DISTANCE_STEP = 10;
+
 interface TextControlsProps {
   textLayers: TextLayer[];
   textStyles: TextStyle[];
@@ -310,7 +313,7 @@ export default function TextControls({
                 label="Distance" 
                 value={distanceFromEdge} 
                 onChange={(e) => setDistanceFromEdge(parseInt(e.target.value) || 0)} 
-                inputProps={{ min: 0, max: 500, step: 10 }} 
+                inputProps={{ min: 0, max: 500, step: DISTANCE_STEP }} 
                 sx={{ width: 80, ...inputStyle }} 
               />
             )}

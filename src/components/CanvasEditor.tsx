@@ -17,6 +17,26 @@ interface CanvasEditorProps {
 
 type ResizeHandle = 'nw' | 'ne' | 'sw' | 'se' | null;
 
+interface DragState {
+  x: number;
+  y: number;
+  imgX: number;
+  imgY: number;
+}
+
+interface ResizeState {
+  zoom: number;
+  x: number;
+  y: number;
+  imgX: number;
+  imgY: number;
+}
+
+// Constants
+const ZOOM_SENSITIVITY = 0.15;
+const MIN_ZOOM = 10;
+const MAX_ZOOM = 500;
+
 export default function CanvasEditor({
   image,
   platforms,
@@ -30,9 +50,9 @@ export default function CanvasEditor({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, imgX: 0, imgY: 0 });
+  const [dragStart, setDragStart] = useState<DragState>({ x: 0, y: 0, imgX: 0, imgY: 0 });
   const [activeHandle, setActiveHandle] = useState<ResizeHandle>(null);
-  const [resizeStart, setResizeStart] = useState({ zoom: 100, x: 0, y: 0, imgX: 0, imgY: 0 });
+  const [resizeStart, setResizeStart] = useState<ResizeState>({ zoom: 100, x: 0, y: 0, imgX: 0, imgY: 0 });
 
   // Full size canvas (no scaling)
   const maxWidth = Math.max(...platforms.map(p => p.width));
@@ -196,8 +216,8 @@ export default function CanvasEditor({
       else if (activeHandle === 'ne') delta = (deltaX - deltaY) / 2;
       else if (activeHandle === 'sw') delta = (-deltaX + deltaY) / 2;
       
-      let newZoom = resizeStart.zoom + delta * 0.15;
-      newZoom = Math.max(10, Math.min(500, newZoom));
+      let newZoom = resizeStart.zoom + delta * ZOOM_SENSITIVITY;
+      newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
 
       if (e.shiftKey) {
         // Resize from center - just update zoom
@@ -278,8 +298,8 @@ export default function CanvasEditor({
       else if (activeHandle === 'ne') delta = (deltaX - deltaY) / 2;
       else if (activeHandle === 'sw') delta = (-deltaX + deltaY) / 2;
       
-      let newZoom = resizeStart.zoom + delta * 0.15;
-      newZoom = Math.max(10, Math.min(500, newZoom));
+      let newZoom = resizeStart.zoom + delta * ZOOM_SENSITIVITY;
+      newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
       onZoomChange(newZoom);
     } else if (isDragging) {
       const deltaX = canvasPos.x - dragStart.x;
