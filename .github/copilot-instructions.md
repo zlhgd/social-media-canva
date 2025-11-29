@@ -11,6 +11,7 @@ This is a Next.js application for creating social media visuals optimized for In
 - Follow React best practices and hooks patterns
 - Keep components focused on single responsibilities
 - Use meaningful variable and function names
+- Keep every components in its own file
 
 ### File Organization
 - `/src/app` - Next.js app router pages

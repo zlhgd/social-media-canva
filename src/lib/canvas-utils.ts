@@ -1,7 +1,45 @@
 import { TextLayer, PlatformConfig } from '@/types';
 
-// Constants for text rendering
 const LINE_HEIGHT_MULTIPLIER = 1.2;
+
+export function calculateExportDimensions(
+  image: HTMLImageElement,
+  platforms: PlatformConfig[]
+): Array<{ platformId: string; width: number; height: number }> {
+  return platforms.map(platform => {
+    const aspectRatio = platform.width / platform.height;
+    
+    const widthBasedHeight = Math.round(image.width / aspectRatio);
+    const heightBasedWidth = Math.round(image.height * aspectRatio);
+    
+    let exportWidth, exportHeight;
+    
+    const widthBasedArea = image.width * widthBasedHeight;
+    const heightBasedArea = heightBasedWidth * image.height;
+    
+    if (widthBasedHeight <= image.height && heightBasedWidth <= image.width) {
+      if (widthBasedArea >= heightBasedArea) {
+        exportWidth = image.width;
+        exportHeight = widthBasedHeight;
+      } else {
+        exportWidth = heightBasedWidth;
+        exportHeight = image.height;
+      }
+    } else if (widthBasedHeight <= image.height) {
+      exportWidth = image.width;
+      exportHeight = widthBasedHeight;
+    } else {
+      exportWidth = heightBasedWidth;
+      exportHeight = image.height;
+    }
+    
+    return {
+      platformId: platform.id,
+      width: exportWidth,
+      height: exportHeight,
+    };
+  });
+}
 
 /**
  * Draw a rounded rectangle on a canvas context

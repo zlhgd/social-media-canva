@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { Box, Card, CardContent, Typography, Button, Stack } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { PlatformConfig, TextLayer } from '@/types';
-import { drawTextLayer, doesImageCoverCanvas } from '@/lib/canvas-utils';
+import { drawTextLayer, doesImageCoverCanvas, calculateExportDimensions } from '@/lib/canvas-utils';
 
-// ID used for preview text layer (not yet added)
 const PREVIEW_TEXT_ID = -1;
-const PREVIEW_SCALE = 1/3;
+const PREVIEW_WIDTH = 300;
 
 interface PreviewsPanelProps {
   image: HTMLImageElement;
@@ -30,6 +29,7 @@ function PlatformPreview({
   zoom,
   averageColor,
   previewText,
+  exportDimensions,
 }: {
   platform: PlatformConfig;
   image: HTMLImageElement;
@@ -39,8 +39,23 @@ function PlatformPreview({
   zoom: number;
   averageColor: string;
   previewText?: Omit<TextLayer, 'id'> | null;
+  exportDimensions: { width: number; height: number };
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const previewDimensions = useMemo(() => {
+    const aspectRatio = exportDimensions.width / exportDimensions.height;
+    let displayWidth, displayHeight;
+    if (aspectRatio >= 1) {
+      displayWidth = PREVIEW_WIDTH;
+      displayHeight = PREVIEW_WIDTH / aspectRatio;
+    } else {
+      displayHeight = PREVIEW_WIDTH;
+      displayWidth = PREVIEW_WIDTH * aspectRatio;
+    }
+    const previewScale = displayWidth / exportDimensions.width;
+    return { displayWidth, displayHeight, previewScale };
+  }, [exportDimensions]);
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -49,34 +64,34 @@ function PlatformPreview({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Preview at 1/3 scale for display
-    canvas.width = platform.width * PREVIEW_SCALE;
-    canvas.height = platform.height * PREVIEW_SCALE;
+    const { displayWidth, displayHeight, previewScale } = previewDimensions;
 
-    const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+
+    const exportPlatform = { ...platform, width: exportDimensions.width, height: exportDimensions.height };
+    const covers = doesImageCoverCanvas(image, exportPlatform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const scale = zoom / 100 * PREVIEW_SCALE;
+    const scale = zoom / 100 * previewScale;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgX = (canvas.width / 2) + (imageX * PREVIEW_SCALE) - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + (imageY * PREVIEW_SCALE) - (imgHeight / 2);
+    const imgX = (canvas.width / 2) + (imageX * previewScale) - (imgWidth / 2);
+    const imgY = (canvas.height / 2) + (imageY * previewScale) - (imgHeight / 2);
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    // Draw existing text layers
     textLayers.forEach(layer => {
-      drawTextLayer(ctx, layer, canvas.width, canvas.height, PREVIEW_SCALE);
+      drawTextLayer(ctx, layer, canvas.width, canvas.height, previewScale);
     });
 
-    // Draw preview text (being edited) with slight transparency
     if (previewText) {
       ctx.globalAlpha = 0.8;
-      drawTextLayer(ctx, { ...previewText, id: PREVIEW_TEXT_ID } as TextLayer, canvas.width, canvas.height, PREVIEW_SCALE);
+      drawTextLayer(ctx, { ...previewText, id: PREVIEW_TEXT_ID } as TextLayer, canvas.width, canvas.height, previewScale);
       ctx.globalAlpha = 1;
     }
-  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor, previewText]);
+  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor, previewText, previewDimensions, exportDimensions]);
 
   useEffect(() => {
     render();
@@ -85,15 +100,15 @@ function PlatformPreview({
   const handleDownload = () => {
     if (!image) return;
 
-    // Export at full resolution
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = platform.width;
-    canvas.height = platform.height;
+    canvas.width = exportDimensions.width;
+    canvas.height = exportDimensions.height;
 
-    const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
+    const exportPlatform = { ...platform, width: exportDimensions.width, height: exportDimensions.height };
+    const covers = doesImageCoverCanvas(image, exportPlatform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -110,7 +125,7 @@ function PlatformPreview({
     });
 
     const link = document.createElement('a');
-    link.download = `${platform.id}-${platform.width}x${platform.height}.png`;
+    link.download = `${platform.id}-${exportDimensions.width}x${exportDimensions.height}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
@@ -137,8 +152,8 @@ function PlatformPreview({
             Télécharger
           </Button>
         </Stack>
-        <Box sx={{ bgcolor: 'grey.200', borderRadius: 1, p: 0.5 }}>
-          <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: 'auto' }} />
+        <Box sx={{ bgcolor: 'grey.200', borderRadius: 1, p: 0.5, display: 'flex', justifyContent: 'center' }}>
+          <canvas ref={canvasRef} style={{ display: 'block', maxWidth: '100%', height: 'auto' }} />
         </Box>
       </CardContent>
     </Card>
@@ -155,15 +170,24 @@ export default function PreviewsPanel({
   averageColor,
   previewText,
 }: PreviewsPanelProps) {
+  const platformExportDimensions = useMemo(() => 
+    calculateExportDimensions(image, platforms), 
+    [platforms, image]
+  );
+
   const generateCanvasForPlatform = (platform: PlatformConfig): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
 
-    canvas.width = platform.width;
-    canvas.height = platform.height;
+    const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
+    if (!dimensions) throw new Error('Export dimensions not found');
 
-    const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+
+    const exportPlatform = { ...platform, width: dimensions.width, height: dimensions.height };
+    const covers = doesImageCoverCanvas(image, exportPlatform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -186,8 +210,11 @@ export default function PreviewsPanel({
     for (const platform of platforms) {
       try {
         const canvas = generateCanvasForPlatform(platform);
+        const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
+        if (!dimensions) continue;
+        
         const link = document.createElement('a');
-        link.download = `${platform.id}-${platform.width}x${platform.height}.png`;
+        link.download = `${platform.id}-${dimensions.width}x${dimensions.height}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -213,19 +240,25 @@ export default function PreviewsPanel({
         </Stack>
 
         <Stack spacing={1}>
-          {platforms.map((platform) => (
-            <PlatformPreview
-              key={platform.id}
-              platform={platform}
-              image={image}
-              textLayers={textLayers}
-              imageX={imageX}
-              imageY={imageY}
-              zoom={zoom}
-              averageColor={averageColor}
-              previewText={previewText}
-            />
-          ))}
+          {platforms.map((platform) => {
+            const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
+            if (!dimensions) return null;
+            
+            return (
+              <PlatformPreview
+                key={platform.id}
+                platform={platform}
+                image={image}
+                textLayers={textLayers}
+                imageX={imageX}
+                imageY={imageY}
+                zoom={zoom}
+                averageColor={averageColor}
+                previewText={previewText}
+                exportDimensions={dimensions}
+              />
+            );
+          })}
         </Stack>
       </CardContent>
     </Card>

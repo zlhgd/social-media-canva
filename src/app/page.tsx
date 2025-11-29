@@ -69,7 +69,10 @@ export default function Home() {
     setAverageColor(getAverageColor(img));
     setImageX(0);
     setImageY(0);
-    setZoom(100);
+    
+    const maxDimension = Math.max(img.width, img.height);
+    const coverZoom = (maxDimension / img.width) * 100;
+    setZoom(coverZoom);
   }, []);
 
   const handlePositionChange = useCallback((x: number, y: number) => {
