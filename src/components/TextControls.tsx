@@ -39,8 +39,9 @@ export default function TextControls({ textLayers, onAddLayer, onDeleteLayer }: 
   const [fontFamily, setFontFamily] = useState('Inter');
   const [fontSize, setFontSize] = useState(48);
   const [color, setColor] = useState('#ffffff');
-  const [strokeColor, setStrokeColor] = useState('#000000');
-  const [strokeWidth, setStrokeWidth] = useState(2);
+  const [backgroundColor, setBackgroundColor] = useState('#000000');
+  const [padding, setPadding] = useState(10);
+  const [borderRadius, setBorderRadius] = useState(8);
   const [styles, setStyles] = useState<string[]>([]);
 
   const handleAddText = () => {
@@ -51,8 +52,9 @@ export default function TextControls({ textLayers, onAddLayer, onDeleteLayer }: 
       fontFamily,
       fontSize,
       color,
-      strokeColor,
-      strokeWidth,
+      backgroundColor,
+      padding,
+      borderRadius,
       isBold: styles.includes('bold'),
       isItalic: styles.includes('italic'),
       x: 0,
@@ -148,31 +150,41 @@ export default function TextControls({ textLayers, onAddLayer, onDeleteLayer }: 
 
             <Box>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                Contour
+                Fond
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <input
-                  type="color"
-                  value={strokeColor}
-                  onChange={(e) => setStrokeColor(e.target.value)}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    border: '1px solid #ccc',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                  }}
-                />
-                <TextField
-                  type="number"
-                  value={strokeWidth}
-                  onChange={(e) => setStrokeWidth(parseInt(e.target.value) || 0)}
-                  inputProps={{ min: 0, max: 10 }}
-                  sx={{ width: 60 }}
-                  size="small"
-                />
-              </Stack>
+              <input
+                type="color"
+                value={backgroundColor}
+                onChange={(e) => setBackgroundColor(e.target.value)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              />
             </Box>
+
+            <TextField
+              type="number"
+              label="Padding"
+              value={padding}
+              onChange={(e) => setPadding(parseInt(e.target.value) || 0)}
+              inputProps={{ min: 0, max: 50 }}
+              sx={{ width: 80 }}
+              size="small"
+            />
+
+            <TextField
+              type="number"
+              label="Rayon"
+              value={borderRadius}
+              onChange={(e) => setBorderRadius(parseInt(e.target.value) || 0)}
+              inputProps={{ min: 0, max: 50 }}
+              sx={{ width: 80 }}
+              size="small"
+            />
 
             <Button
               variant="contained"

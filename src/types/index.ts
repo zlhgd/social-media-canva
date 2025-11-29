@@ -13,8 +13,9 @@ export interface TextLayer {
   fontFamily: string;
   fontSize: number;
   color: string;
-  strokeColor: string;
-  strokeWidth: number;
+  backgroundColor: string;
+  padding: number;
+  borderRadius: number;
   isBold: boolean;
   isItalic: boolean;
   x: number;

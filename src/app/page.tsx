@@ -66,6 +66,12 @@ export default function Home() {
     setTextLayers(prev => prev.filter(layer => layer.id !== id));
   }, []);
 
+  const handleTextLayerPositionChange = useCallback((layerId: number, x: number, y: number) => {
+    setTextLayers(prev => prev.map(layer => 
+      layer.id === layerId ? { ...layer, x, y } : layer
+    ));
+  }, []);
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default', py: 4 }}>
       <Container maxWidth="xl">
@@ -109,6 +115,7 @@ export default function Home() {
               onPositionChange={handlePositionChange}
               onZoomChange={handleZoomChange}
               onReset={handleReset}
+              onTextLayerPositionChange={handleTextLayerPositionChange}
             />
 
             <TextControls

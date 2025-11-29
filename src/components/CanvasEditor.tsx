@@ -15,6 +15,30 @@ interface CanvasEditorProps {
   onPositionChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
   onReset: () => void;
+  onTextLayerPositionChange?: (layerId: number, x: number, y: number) => void;
+}
+
+// Helper function to draw rounded rectangle
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  ctx.fill();
 }
 
 export default function CanvasEditor({
@@ -27,12 +51,17 @@ export default function CanvasEditor({
   onPositionChange,
   onZoomChange,
   onReset,
+  onTextLayerPositionChange,
 }: CanvasEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [draggedTextLayerId, setDraggedTextLayerId] = useState<number | null>(null);
 
   const displayScale = 0.5;
+
+  // Store text layer bounding boxes for hit testing
+  const textLayerBoundsRef = useRef<Map<number, { x: number; y: number; width: number; height: number }>>(new Map());
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -61,9 +90,15 @@ export default function CanvasEditor({
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    // Draw text layers
+    // Clear and rebuild text layer bounds
+    textLayerBoundsRef.current.clear();
+
+    // Draw text layers with background
     textLayers.forEach(layer => {
       const fontSize = layer.fontSize * displayScale;
+      const padding = layer.padding * displayScale;
+      const borderRadius = layer.borderRadius * displayScale;
+      
       let fontStyle = '';
       if (layer.isItalic) fontStyle += 'italic ';
       if (layer.isBold) fontStyle += 'bold ';
@@ -75,13 +110,32 @@ export default function CanvasEditor({
       const x = canvas.width / 2 + (layer.x * displayScale);
       const y = canvas.height / 2 + (layer.y * displayScale);
 
-      if (layer.strokeWidth > 0) {
-        ctx.strokeStyle = layer.strokeColor;
-        ctx.lineWidth = layer.strokeWidth * displayScale;
-        ctx.lineJoin = 'round';
-        ctx.strokeText(layer.text, x, y);
+      // Measure text for background
+      const textMetrics = ctx.measureText(layer.text);
+      const textWidth = textMetrics.width;
+      const textHeight = fontSize;
+
+      // Calculate background bounds
+      const bgX = x - textWidth / 2 - padding;
+      const bgY = y - textHeight / 2 - padding;
+      const bgWidth = textWidth + padding * 2;
+      const bgHeight = textHeight + padding * 2;
+
+      // Store bounds for hit testing (in canvas coordinates)
+      textLayerBoundsRef.current.set(layer.id, {
+        x: bgX,
+        y: bgY,
+        width: bgWidth,
+        height: bgHeight,
+      });
+
+      // Draw background with rounded corners
+      if (layer.backgroundColor && layer.backgroundColor !== 'transparent') {
+        ctx.fillStyle = layer.backgroundColor;
+        drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
       }
 
+      // Draw text
       ctx.fillStyle = layer.color;
       ctx.fillText(layer.text, x, y);
     });
@@ -124,41 +178,130 @@ export default function CanvasEditor({
     render();
   }, [render]);
 
+  // Helper function to get canvas-relative mouse position
+  const getCanvasPosition = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  // Check if a point is inside any text layer
+  const getTextLayerAtPosition = useCallback((canvasX: number, canvasY: number): number | null => {
+    // Check in reverse order (top-most layer first)
+    const layerIds = Array.from(textLayerBoundsRef.current.keys()).reverse();
+    for (const layerId of layerIds) {
+      const bounds = textLayerBoundsRef.current.get(layerId);
+      if (bounds) {
+        if (
+          canvasX >= bounds.x &&
+          canvasX <= bounds.x + bounds.width &&
+          canvasY >= bounds.y &&
+          canvasY <= bounds.y + bounds.height
+        ) {
+          return layerId;
+        }
+      }
+    }
+    return null;
+  }, []);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - imageX, y: e.clientY - imageY });
-  }, [imageX, imageY]);
+    const canvasPos = getCanvasPosition(e.clientX, e.clientY);
+    const textLayerId = getTextLayerAtPosition(canvasPos.x, canvasPos.y);
+    
+    if (textLayerId !== null && onTextLayerPositionChange) {
+      // Dragging a text layer
+      const layer = textLayers.find(l => l.id === textLayerId);
+      if (layer) {
+        setDraggedTextLayerId(textLayerId);
+        setIsDragging(true);
+        setDragStart({ x: e.clientX - layer.x, y: e.clientY - layer.y });
+      }
+    } else {
+      // Dragging the image
+      setDraggedTextLayerId(null);
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - imageX, y: e.clientY - imageY });
+    }
+  }, [imageX, imageY, textLayers, getCanvasPosition, getTextLayerAtPosition, onTextLayerPositionChange]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging) return;
-    onPositionChange(e.clientX - dragStart.x, e.clientY - dragStart.y);
-  }, [isDragging, dragStart, onPositionChange]);
+    
+    if (draggedTextLayerId !== null && onTextLayerPositionChange) {
+      // Moving a text layer
+      onTextLayerPositionChange(
+        draggedTextLayerId,
+        e.clientX - dragStart.x,
+        e.clientY - dragStart.y
+      );
+    } else {
+      // Moving the image
+      onPositionChange(e.clientX - dragStart.x, e.clientY - dragStart.y);
+    }
+  }, [isDragging, dragStart, draggedTextLayerId, onPositionChange, onTextLayerPositionChange]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setDraggedTextLayerId(null);
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    setIsDragging(true);
-    setDragStart({ x: touch.clientX - imageX, y: touch.clientY - imageY });
-  }, [imageX, imageY]);
+    const canvasPos = getCanvasPosition(touch.clientX, touch.clientY);
+    const textLayerId = getTextLayerAtPosition(canvasPos.x, canvasPos.y);
+    
+    if (textLayerId !== null && onTextLayerPositionChange) {
+      // Dragging a text layer
+      const layer = textLayers.find(l => l.id === textLayerId);
+      if (layer) {
+        setDraggedTextLayerId(textLayerId);
+        setIsDragging(true);
+        setDragStart({ x: touch.clientX - layer.x, y: touch.clientY - layer.y });
+      }
+    } else {
+      // Dragging the image
+      setDraggedTextLayerId(null);
+      setIsDragging(true);
+      setDragStart({ x: touch.clientX - imageX, y: touch.clientY - imageY });
+    }
+  }, [imageX, imageY, textLayers, getCanvasPosition, getTextLayerAtPosition, onTextLayerPositionChange]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging) return;
     const touch = e.touches[0];
-    onPositionChange(touch.clientX - dragStart.x, touch.clientY - dragStart.y);
-  }, [isDragging, dragStart, onPositionChange]);
+    
+    if (draggedTextLayerId !== null && onTextLayerPositionChange) {
+      // Moving a text layer
+      onTextLayerPositionChange(
+        draggedTextLayerId,
+        touch.clientX - dragStart.x,
+        touch.clientY - dragStart.y
+      );
+    } else {
+      // Moving the image
+      onPositionChange(touch.clientX - dragStart.x, touch.clientY - dragStart.y);
+    }
+  }, [isDragging, dragStart, draggedTextLayerId, onPositionChange, onTextLayerPositionChange]);
 
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
+    setDraggedTextLayerId(null);
   }, []);
 
   return (
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          🖼️ Éditeur - Déplacez et redimensionnez l{"'"}image
+          🖼️ Éditeur - Déplacez l{"'"}image ou le texte
         </Typography>
 
         <Box
