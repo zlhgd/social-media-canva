@@ -14,6 +14,7 @@ interface PreviewsPanelProps {
   imageY: number;
   zoom: number;
   averageColor: string;
+  previewText?: Omit<TextLayer, 'id'> | null;
 }
 
 function PlatformPreview({
@@ -24,6 +25,7 @@ function PlatformPreview({
   imageY,
   zoom,
   averageColor,
+  previewText,
 }: {
   platform: PlatformConfig;
   image: HTMLImageElement;
@@ -32,6 +34,7 @@ function PlatformPreview({
   imageY: number;
   zoom: number;
   averageColor: string;
+  previewText?: Omit<TextLayer, 'id'> | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -42,35 +45,34 @@ function PlatformPreview({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Preview scale for display
-    const maxPreviewSize = 250;
-    const previewScale = Math.min(
-      maxPreviewSize / platform.width,
-      maxPreviewSize / platform.height
-    );
+    // Real size canvas
+    canvas.width = platform.width;
+    canvas.height = platform.height;
 
-    canvas.width = platform.width * previewScale;
-    canvas.height = platform.height * previewScale;
-
-    // Use average color as background if image doesn't cover
     const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate image position and size
     const scale = zoom / 100;
-    const imgWidth = image.width * scale * previewScale;
-    const imgHeight = image.height * scale * previewScale;
-    const imgX = (canvas.width / 2) + (imageX * previewScale) - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + (imageY * previewScale) - (imgHeight / 2);
+    const imgWidth = image.width * scale;
+    const imgHeight = image.height * scale;
+    const imgX = (canvas.width / 2) + imageX - (imgWidth / 2);
+    const imgY = (canvas.height / 2) + imageY - (imgHeight / 2);
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    // Draw text layers with background
+    // Draw existing text layers
     textLayers.forEach(layer => {
-      drawTextLayer(ctx, layer, canvas.width, canvas.height, previewScale);
+      drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
-  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor]);
+
+    // Draw preview text (being edited) with slight transparency
+    if (previewText) {
+      ctx.globalAlpha = 0.8;
+      drawTextLayer(ctx, { ...previewText, id: -1 }, canvas.width, canvas.height, 1);
+      ctx.globalAlpha = 1;
+    }
+  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor, previewText]);
 
   useEffect(() => {
     render();
@@ -86,12 +88,10 @@ function PlatformPreview({
     canvas.width = platform.width;
     canvas.height = platform.height;
 
-    // Use average color as background if image doesn't cover
     const covers = doesImageCoverCanvas(image, platform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate image position and size
     const scale = zoom / 100;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
@@ -100,12 +100,10 @@ function PlatformPreview({
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    // Draw text layers at full resolution with background
     textLayers.forEach(layer => {
       drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
 
-    // Download
     const link = document.createElement('a');
     link.download = `${platform.id}-${platform.width}x${platform.height}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -113,43 +111,24 @@ function PlatformPreview({
   };
 
   return (
-    <Card variant="outlined" sx={{ height: '100%' }}>
-      <CardContent sx={{ textAlign: 'center', p: 1.5 }}>
-        <Typography variant="subtitle2" sx={{ color: platform.color, mb: 0.5 }}>
-          {platform.icon} {platform.name}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-          {platform.width} × {platform.height}
-        </Typography>
-        <Box
-          sx={{
-            backgroundColor: '#f5f5f5',
-            borderRadius: 1,
-            p: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            mb: 1,
-          }}
-        >
-          <canvas
-            ref={canvasRef}
-            style={{
-              maxWidth: '100%',
-              maxHeight: 200,
-            }}
-          />
+    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+          <Box>
+            <Typography variant="caption" sx={{ color: platform.color, fontWeight: 600 }}>
+              {platform.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, fontSize: '0.65rem' }}>
+              {platform.width}×{platform.height}
+            </Typography>
+          </Box>
+          <Button variant="contained" color="success" size="small" startIcon={<DownloadIcon />} onClick={handleDownload} sx={{ borderRadius: 1, textTransform: 'none', py: 0.25, fontSize: '0.7rem' }}>
+            Télécharger
+          </Button>
+        </Stack>
+        <Box sx={{ backgroundColor: '#f0f0f0', borderRadius: 0.5, p: 0.5, overflow: 'auto', maxHeight: 400 }}>
+          <canvas ref={canvasRef} style={{ display: 'block', maxWidth: '100%', height: 'auto' }} />
         </Box>
-        <Button
-          variant="contained"
-          color="success"
-          size="small"
-          startIcon={<DownloadIcon />}
-          onClick={handleDownload}
-          fullWidth
-        >
-          Télécharger
-        </Button>
       </CardContent>
     </Card>
   );
@@ -163,6 +142,7 @@ export default function PreviewsPanel({
   imageY,
   zoom,
   averageColor,
+  previewText,
 }: PreviewsPanelProps) {
   const generateCanvasForPlatform = (platform: PlatformConfig): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
@@ -184,7 +164,6 @@ export default function PreviewsPanel({
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    // Draw text layers with background
     textLayers.forEach(layer => {
       drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
@@ -192,21 +171,15 @@ export default function PreviewsPanel({
     return canvas;
   };
 
-  const downloadCanvas = (canvas: HTMLCanvasElement, filename: string): Promise<void> => {
-    return new Promise((resolve) => {
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      setTimeout(resolve, 100);
-    });
-  };
-
   const handleDownloadAll = async () => {
     for (const platform of platforms) {
       try {
         const canvas = generateCanvasForPlatform(platform);
-        await downloadCanvas(canvas, `${platform.id}-${platform.width}x${platform.height}.png`);
+        const link = document.createElement('a');
+        link.download = `${platform.id}-${platform.width}x${platform.height}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
         console.error(`Failed to download ${platform.name}:`, error);
       }
@@ -214,13 +187,16 @@ export default function PreviewsPanel({
   };
 
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent sx={{ p: 2 }}>
-        <Typography variant="subtitle1" gutterBottom fontWeight={600}>
-          👀 Aperçus
-        </Typography>
+    <Card sx={{ height: '100%', borderRadius: 1 }}>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant="body2" fontWeight={600}>Aperçus</Typography>
+          <Button variant="contained" size="small" startIcon={<DownloadIcon />} onClick={handleDownloadAll} sx={{ borderRadius: 1, textTransform: 'none', fontSize: '0.75rem' }}>
+            Tout télécharger
+          </Button>
+        </Stack>
 
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {platforms.map((platform) => (
             <PlatformPreview
               key={platform.id}
@@ -231,19 +207,10 @@ export default function PreviewsPanel({
               imageY={imageY}
               zoom={zoom}
               averageColor={averageColor}
+              previewText={previewText}
             />
           ))}
         </Stack>
-
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            onClick={handleDownloadAll}
-          >
-            Tout télécharger
-          </Button>
-        </Box>
       </CardContent>
     </Card>
   );

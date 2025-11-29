@@ -1,11 +1,9 @@
 export interface PlatformConfig {
   id: string;
   name: string;
-  shortName: string;
   width: number;
   height: number;
   color: string;
-  icon: string;
 }
 
 export type VerticalAlignment = 'top' | 'middle' | 'bottom';
@@ -48,23 +46,6 @@ export interface TextStyle {
   shadow: TextShadow;
 }
 
-export interface ImageState {
-  image: HTMLImageElement | null;
-  imageX: number;
-  imageY: number;
-  zoom: number;
-  averageColor: string;
-}
-
-export interface AppState {
-  platforms: PlatformConfig[];
-  textLayers: TextLayer[];
-  textStyles: TextStyle[];
-  imageX: number;
-  imageY: number;
-  zoom: number;
-}
-
 export const DEFAULT_SHADOW: TextShadow = {
   enabled: false,
   color: '#000000',
@@ -73,10 +54,14 @@ export const DEFAULT_SHADOW: TextShadow = {
   offsetY: 2,
 };
 
+// Official recommended sizes:
+// Facebook feed: 1080×1080 (1:1) or 1080×1350 (4:5)
+// Instagram feed: 1080px width, height 628-1350px (square, portrait, landscape)
+// LinkedIn post: 552×276 minimum, max 5MB
 export const DEFAULT_PLATFORMS: PlatformConfig[] = [
-  { id: 'instagram', name: 'Instagram', shortName: 'IG', width: 1080, height: 1080, color: '#e1306c', icon: '📸' },
-  { id: 'facebook', name: 'Facebook', shortName: 'FB', width: 1200, height: 630, color: '#1877f2', icon: '📘' },
-  { id: 'linkedin', name: 'LinkedIn', shortName: 'LI', width: 1200, height: 627, color: '#0a66c2', icon: '💼' },
+  { id: 'facebook', name: 'Facebook', width: 1080, height: 1080, color: '#1877f2' },
+  { id: 'instagram', name: 'Instagram', width: 1080, height: 1350, color: '#e1306c' },
+  { id: 'linkedin', name: 'LinkedIn', width: 1200, height: 627, color: '#0a66c2' },
 ];
 
 export const FONT_OPTIONS = [
@@ -84,10 +69,11 @@ export const FONT_OPTIONS = [
   'Roboto',
   'Open Sans',
   'Montserrat',
+  'Futura',
   'Playfair Display',
   'Arial',
   'Georgia',
   'Times New Roman',
 ];
 
-export const STORAGE_KEY = 'social-media-canva-state';
+export const STORAGE_KEY = 'social-media-canva-config';

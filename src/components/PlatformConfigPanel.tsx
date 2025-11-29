@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Card, CardContent, Typography, TextField, Grid } from '@mui/material';
+import { Box, Typography, TextField, Stack } from '@mui/material';
 import { PlatformConfig } from '@/types';
 
 interface PlatformConfigPanelProps {
@@ -21,42 +21,31 @@ export default function PlatformConfigPanel({ platforms, onPlatformChange }: Pla
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          📐 Dimensions des plateformes
-        </Typography>
-        
-        <Grid container spacing={3}>
-          {platforms.map((platform) => (
-            <Grid size={{ xs: 12, md: 4 }} key={platform.id}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography sx={{ minWidth: 100, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <span>{platform.icon}</span>
-                  <span style={{ color: platform.color, fontWeight: 500 }}>{platform.name}</span>
-                </Typography>
-                <TextField
-                  type="number"
-                  size="small"
-                  value={platform.width}
-                  onChange={(e) => handleDimensionChange(platform.id, 'width', e.target.value)}
-                  inputProps={{ min: 100, max: 4000 }}
-                  sx={{ width: 80 }}
-                />
-                <Typography>×</Typography>
-                <TextField
-                  type="number"
-                  size="small"
-                  value={platform.height}
-                  onChange={(e) => handleDimensionChange(platform.id, 'height', e.target.value)}
-                  inputProps={{ min: 100, max: 4000 }}
-                  sx={{ width: 80 }}
-                />
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </CardContent>
-    </Card>
+    <Stack spacing={1}>
+      {platforms.map((platform) => (
+        <Box key={platform.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography sx={{ minWidth: 80, color: platform.color, fontWeight: 500, fontSize: '0.875rem' }}>
+            {platform.name}
+          </Typography>
+          <TextField
+            type="number"
+            size="small"
+            value={platform.width}
+            onChange={(e) => handleDimensionChange(platform.id, 'width', e.target.value)}
+            inputProps={{ min: 100, max: 4000 }}
+            sx={{ width: 80, '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+          />
+          <Typography variant="body2">×</Typography>
+          <TextField
+            type="number"
+            size="small"
+            value={platform.height}
+            onChange={(e) => handleDimensionChange(platform.id, 'height', e.target.value)}
+            inputProps={{ min: 100, max: 4000 }}
+            sx={{ width: 80, '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+          />
+        </Box>
+      ))}
+    </Stack>
   );
 }

@@ -23,63 +23,54 @@ import PreviewsPanel from '@/components/PreviewsPanel';
 import { PlatformConfig, TextLayer, TextStyle, DEFAULT_PLATFORMS, STORAGE_KEY } from '@/types';
 import { getAverageColor } from '@/lib/canvas-utils';
 
-// Helper to load from localStorage synchronously
-function loadFromStorage(): Partial<{
-  platforms: PlatformConfig[];
-  textStyles: TextStyle[];
-  imageX: number;
-  imageY: number;
-  zoom: number;
-}> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (error) {
-    console.error('Error loading from localStorage:', error);
-  }
-  return {};
-}
-
 export default function Home() {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [platforms, setPlatforms] = useState<PlatformConfig[]>(() => {
-    const saved = loadFromStorage();
-    return saved.platforms || DEFAULT_PLATFORMS;
-  });
-  const [imageX, setImageX] = useState(() => loadFromStorage().imageX || 0);
-  const [imageY, setImageY] = useState(() => loadFromStorage().imageY || 0);
-  const [zoom, setZoom] = useState(() => loadFromStorage().zoom || 100);
+  const [platforms, setPlatforms] = useState<PlatformConfig[]>(DEFAULT_PLATFORMS);
+  const [imageX, setImageX] = useState(0);
+  const [imageY, setImageY] = useState(0);
+  const [zoom, setZoom] = useState(100);
   const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
-  const [textStyles, setTextStyles] = useState<TextStyle[]>(() => {
-    const saved = loadFromStorage();
-    return saved.textStyles || [];
-  });
+  const [textStyles, setTextStyles] = useState<TextStyle[]>([]);
   const [textIdCounter, setTextIdCounter] = useState(0);
   const [averageColor, setAverageColor] = useState('#808080');
   const [platformDialogOpen, setPlatformDialogOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [previewText, setPreviewText] = useState<Omit<TextLayer, 'id'> | null>(null);
 
-  // Save to localStorage whenever state changes
+  // Mark as client-side and load from localStorage
   useEffect(() => {
+    setIsClient(true);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.platforms) setPlatforms(parsed.platforms);
+        if (parsed.textStyles) setTextStyles(parsed.textStyles);
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+  }, []);
+
+  // Save only config (platforms and text styles) to localStorage
+  useEffect(() => {
+    if (!isClient) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         platforms,
         textStyles,
-        imageX,
-        imageY,
-        zoom,
       }));
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
-  }, [platforms, textStyles, imageX, imageY, zoom]);
+  }, [platforms, textStyles, isClient]);
 
   const handleImageLoad = useCallback((img: HTMLImageElement) => {
     setImage(img);
     setAverageColor(getAverageColor(img));
-    // Don't reset position/zoom to preserve localStorage values
+    setImageX(0);
+    setImageY(0);
+    setZoom(100);
   }, []);
 
   const handlePositionChange = useCallback((x: number, y: number) => {
@@ -89,12 +80,6 @@ export default function Home() {
 
   const handleZoomChange = useCallback((newZoom: number) => {
     setZoom(newZoom);
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setImageX(0);
-    setImageY(0);
-    setZoom(100);
   }, []);
 
   const handleNewImage = useCallback(() => {
@@ -110,6 +95,12 @@ export default function Home() {
     setTextIdCounter(prev => prev + 1);
     setTextLayers(prev => [...prev, { ...layer, id: textIdCounter + 1 }]);
   }, [textIdCounter]);
+
+  const handleUpdateTextLayer = useCallback((id: number, updates: Partial<TextLayer>) => {
+    setTextLayers(prev => prev.map(layer =>
+      layer.id === id ? { ...layer, ...updates } : layer
+    ));
+  }, []);
 
   const handleDeleteTextLayer = useCallback((id: number) => {
     setTextLayers(prev => prev.filter(layer => layer.id !== id));
@@ -127,23 +118,27 @@ export default function Home() {
     setTextStyles(prev => prev.filter(style => style.id !== id));
   }, []);
 
+  const handlePreviewChange = useCallback((preview: Omit<TextLayer, 'id'> | null) => {
+    setPreviewText(preview);
+  }, []);
+
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 2 }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#fafafa', p: 1 }}>
       <Container maxWidth="xl" disableGutters>
-        {/* Content */}
         {!image ? (
           <ImageUploader onImageLoad={handleImageLoad} />
         ) : (
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             {/* Left Column - Editor */}
-            <Grid size={{ xs: 12, lg: 7 }}>
-              <Stack spacing={2}>
+            <Grid size={{ xs: 12, lg: 5 }}>
+              <Stack spacing={1}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Button
                     variant="outlined"
                     size="small"
                     startIcon={<SettingsIcon />}
                     onClick={() => setPlatformDialogOpen(true)}
+                    sx={{ borderRadius: 1 }}
                   >
                     Plateformes
                   </Button>
@@ -152,6 +147,7 @@ export default function Home() {
                     size="small"
                     startIcon={<RefreshIcon />}
                     onClick={handleNewImage}
+                    sx={{ borderRadius: 1 }}
                   >
                     Nouvelle image
                   </Button>
@@ -166,22 +162,23 @@ export default function Home() {
                   averageColor={averageColor}
                   onPositionChange={handlePositionChange}
                   onZoomChange={handleZoomChange}
-                  onReset={handleReset}
                 />
 
                 <TextControls
                   textLayers={textLayers}
                   textStyles={textStyles}
                   onAddLayer={handleAddTextLayer}
+                  onUpdateLayer={handleUpdateTextLayer}
                   onDeleteLayer={handleDeleteTextLayer}
                   onSaveStyle={handleSaveTextStyle}
                   onDeleteStyle={handleDeleteTextStyle}
+                  onPreviewChange={handlePreviewChange}
                 />
               </Stack>
             </Grid>
 
             {/* Right Column - Previews */}
-            <Grid size={{ xs: 12, lg: 5 }}>
+            <Grid size={{ xs: 12, lg: 7 }}>
               <PreviewsPanel
                 image={image}
                 platforms={platforms}
@@ -190,6 +187,7 @@ export default function Home() {
                 imageY={imageY}
                 zoom={zoom}
                 averageColor={averageColor}
+                previewText={previewText}
               />
             </Grid>
           </Grid>
@@ -199,16 +197,16 @@ export default function Home() {
         <Dialog
           open={platformDialogOpen}
           onClose={() => setPlatformDialogOpen(false)}
-          maxWidth="md"
+          maxWidth="sm"
           fullWidth
         >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
             Configuration des plateformes
-            <IconButton onClick={() => setPlatformDialogOpen(false)}>
+            <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <DialogContent>
+          <DialogContent sx={{ pt: 1 }}>
             <PlatformConfigPanel
               platforms={platforms}
               onPlatformChange={setPlatforms}
