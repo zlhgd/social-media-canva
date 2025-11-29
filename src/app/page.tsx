@@ -123,31 +123,29 @@ export default function Home() {
   }, []);
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#fafafa', p: 1 }}>
-      <Container maxWidth="xl" disableGutters>
+    <Box sx={{ height: '100vh', backgroundColor: '#fafafa', p: 1, display: 'flex', flexDirection: 'column' }}>
+      <Container maxWidth="xl" disableGutters sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {!image ? (
           <ImageUploader onImageLoad={handleImageLoad} />
         ) : (
-          <Grid container spacing={1}>
-            {/* Left Column - Editor */}
-            <Grid size={{ xs: 12, lg: 5 }}>
-              <Stack spacing={0.75}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Grid container spacing={1} sx={{ flexGrow: 1, overflow: 'hidden' }}>
+            {/* Left Column - Editor (scrollable within itself) */}
+            <Grid size={{ xs: 12, lg: 5 }} sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <Stack spacing={1} sx={{ height: '100%', overflow: 'auto' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                   <Button
                     variant="outlined"
                     size="small"
-                    startIcon={<SettingsIcon sx={{ fontSize: 16 }} />}
+                    startIcon={<SettingsIcon />}
                     onClick={() => setPlatformDialogOpen(true)}
-                    sx={{ borderRadius: 0.5, textTransform: 'none', fontSize: '0.75rem', py: 0.25 }}
                   >
                     Plateformes
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
-                    startIcon={<RefreshIcon sx={{ fontSize: 16 }} />}
+                    startIcon={<RefreshIcon />}
                     onClick={handleNewImage}
-                    sx={{ borderRadius: 0.5, textTransform: 'none', fontSize: '0.75rem', py: 0.25 }}
                   >
                     Nouvelle image
                   </Button>
@@ -177,8 +175,8 @@ export default function Home() {
               </Stack>
             </Grid>
 
-            {/* Right Column - Previews */}
-            <Grid size={{ xs: 12, lg: 7 }}>
+            {/* Right Column - Previews (scrollable) */}
+            <Grid size={{ xs: 12, lg: 7 }} sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <PreviewsPanel
                 image={image}
                 platforms={platforms}
@@ -200,13 +198,13 @@ export default function Home() {
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, fontSize: '0.9rem' }}>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             Configuration des plateformes
             <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
-              <CloseIcon sx={{ fontSize: 18 }} />
+              <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <DialogContent sx={{ pt: 1 }}>
+          <DialogContent>
             <PlatformConfigPanel
               platforms={platforms}
               onPlatformChange={setPlatforms}

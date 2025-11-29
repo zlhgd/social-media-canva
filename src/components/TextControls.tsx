@@ -199,12 +199,11 @@ export default function TextControls({
   };
 
   const inputStyle = { 
-    '& .MuiOutlinedInput-root': { borderRadius: 0.5 },
-    '& .MuiInputLabel-root': { fontSize: '0.75rem' },
+    '& .MuiOutlinedInput-root': { borderRadius: 1 },
   };
 
   return (
-    <Card sx={{ borderRadius: 0.5 }}>
+    <Card variant="outlined" sx={{ borderRadius: 1 }}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
           Texte {editingLayerId !== null && <span style={{ fontWeight: 400, color: '#666' }}>(modification en cours)</span>}
@@ -214,21 +213,24 @@ export default function TextControls({
           <Box sx={{ mb: 0.5 }}>
             <Stack direction="row" spacing={0.5} flexWrap="wrap">
               {textStyles.map((style) => (
-                <Chip key={style.id} label={style.name} onClick={() => applyStyle(style)} onDelete={() => onDeleteStyle(style.id)} size="small" sx={{ mb: 0.5, borderRadius: 0.5, height: 22 }} />
+                <Chip key={style.id} label={style.name} onClick={() => applyStyle(style)} onDelete={() => onDeleteStyle(style.id)} size="small" sx={{ mb: 0.5, borderRadius: 1, height: 24 }} />
               ))}
             </Stack>
           </Box>
         )}
 
         <Stack spacing={0.75}>
-          {/* Text input */}
+          {/* Text input - multiline */}
           <TextField
             fullWidth
             size="small"
             placeholder="Saisissez votre texte..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            inputProps={{ maxLength: 200 }}
+            inputProps={{ maxLength: 500 }}
+            multiline
+            minRows={1}
+            maxRows={4}
             sx={inputStyle}
           />
 
@@ -361,15 +363,14 @@ export default function TextControls({
           </Stack>
 
           {/* Row 5: Buttons */}
-          <Stack direction="row" spacing={0.5}>
+          <Stack direction="row" spacing={1}>
             {editingLayerId === null ? (
               <Button 
                 variant="contained" 
                 size="small" 
-                startIcon={<AddIcon sx={{ fontSize: 16 }} />} 
+                startIcon={<AddIcon />} 
                 onClick={handleAddNew} 
-                disabled={!text.trim()} 
-                sx={{ borderRadius: 0.5, textTransform: 'none', py: 0.25, fontSize: '0.75rem' }}
+                disabled={!text.trim()}
               >
                 Ajouter
               </Button>
@@ -377,8 +378,7 @@ export default function TextControls({
               <Button 
                 variant="outlined" 
                 size="small" 
-                onClick={resetForm} 
-                sx={{ borderRadius: 0.5, textTransform: 'none', py: 0.25, fontSize: '0.75rem' }}
+                onClick={resetForm}
               >
                 Nouveau calque
               </Button>
@@ -386,11 +386,10 @@ export default function TextControls({
             <Button 
               variant="outlined" 
               size="small" 
-              startIcon={<SaveIcon sx={{ fontSize: 16 }} />} 
-              onClick={() => setSaveStyleDialogOpen(true)} 
-              sx={{ borderRadius: 0.5, textTransform: 'none', py: 0.25, fontSize: '0.75rem' }}
+              startIcon={<SaveIcon />} 
+              onClick={() => setSaveStyleDialogOpen(true)}
             >
-              Style
+              Sauver style
             </Button>
           </Stack>
         </Stack>

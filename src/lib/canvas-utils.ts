@@ -31,18 +31,18 @@ export function drawRoundedRect(
 function calculateTextY(
   layer: TextLayer,
   canvasHeight: number,
-  fontSize: number,
+  textBlockHeight: number,
   padding: number,
   scale: number
 ): number {
   const distance = layer.distanceFromEdge * scale;
-  const textBoxHeight = fontSize + padding * 2;
+  const totalHeight = textBlockHeight + padding * 2;
   
   switch (layer.verticalAlign) {
     case 'top':
-      return distance + textBoxHeight / 2;
+      return distance + totalHeight / 2;
     case 'bottom':
-      return canvasHeight - distance - textBoxHeight / 2;
+      return canvasHeight - distance - totalHeight / 2;
     case 'middle':
     default:
       return canvasHeight / 2;
@@ -50,7 +50,7 @@ function calculateTextY(
 }
 
 /**
- * Draw a text layer with background and shadow on a canvas
+ * Draw a text layer with background and shadow on a canvas (supports multiline)
  */
 export function drawTextLayer(
   ctx: CanvasRenderingContext2D,
@@ -62,6 +62,7 @@ export function drawTextLayer(
   const fontSize = layer.fontSize * scale;
   const padding = layer.padding * scale;
   const borderRadius = layer.borderRadius * scale;
+  const lineHeight = fontSize * 1.2;
   
   let fontStyle = '';
   if (layer.isItalic) fontStyle += 'italic ';
@@ -71,19 +72,27 @@ export function drawTextLayer(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
+  // Split text into lines
+  const lines = layer.text.split('\n');
+  const lineCount = lines.length;
+  
+  // Calculate total text block dimensions
+  let maxLineWidth = 0;
+  lines.forEach(line => {
+    const metrics = ctx.measureText(line);
+    if (metrics.width > maxLineWidth) maxLineWidth = metrics.width;
+  });
+  
+  const textBlockHeight = lineCount * lineHeight;
+  
   const x = canvasWidth / 2;
-  const y = calculateTextY(layer, canvasHeight, fontSize, padding, scale);
-
-  // Measure text for background
-  const textMetrics = ctx.measureText(layer.text);
-  const textWidth = textMetrics.width;
-  const textHeight = fontSize;
+  const centerY = calculateTextY(layer, canvasHeight, textBlockHeight, padding, scale);
 
   // Calculate background bounds
-  const bgX = x - textWidth / 2 - padding;
-  const bgY = y - textHeight / 2 - padding;
-  const bgWidth = textWidth + padding * 2;
-  const bgHeight = textHeight + padding * 2;
+  const bgX = x - maxLineWidth / 2 - padding;
+  const bgY = centerY - textBlockHeight / 2 - padding;
+  const bgWidth = maxLineWidth + padding * 2;
+  const bgHeight = textBlockHeight + padding * 2;
 
   // Save context state
   ctx.save();
@@ -102,9 +111,12 @@ export function drawTextLayer(
     ctx.shadowOffsetY = layer.shadow.offsetY * scale;
   }
 
-  // Draw text
+  // Draw each line of text
   ctx.fillStyle = layer.color;
-  ctx.fillText(layer.text, x, y);
+  lines.forEach((line, index) => {
+    const lineY = centerY - (textBlockHeight / 2) + (index * lineHeight) + (lineHeight / 2);
+    ctx.fillText(line, x, lineY);
+  });
 
   // Restore context state
   ctx.restore();

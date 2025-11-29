@@ -116,14 +116,14 @@ function PlatformPreview({
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 0.5 }}>
-      <CardContent sx={{ p: 0.75, '&:last-child': { pb: 0.75 } }}>
+    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
           <Box>
-            <Typography variant="caption" sx={{ color: platform.color, fontWeight: 600, fontSize: '0.7rem' }}>
+            <Typography variant="body2" sx={{ color: platform.color, fontWeight: 600 }}>
               {platform.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5, fontSize: '0.6rem' }}>
+            <Typography variant="caption" color="text.secondary">
               {platform.width}×{platform.height}
             </Typography>
           </Box>
@@ -131,14 +131,13 @@ function PlatformPreview({
             variant="contained" 
             color="success" 
             size="small" 
-            startIcon={<DownloadIcon sx={{ fontSize: 14 }} />} 
-            onClick={handleDownload} 
-            sx={{ borderRadius: 0.5, textTransform: 'none', py: 0, px: 1, fontSize: '0.65rem', minHeight: 24 }}
+            startIcon={<DownloadIcon fontSize="small" />} 
+            onClick={handleDownload}
           >
             Télécharger
           </Button>
         </Stack>
-        <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: 0.5, p: 0.5 }}>
+        <Box sx={{ backgroundColor: '#f0f0f0', borderRadius: 1, p: 0.5 }}>
           <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: 'auto' }} />
         </Box>
       </CardContent>
@@ -199,36 +198,37 @@ export default function PreviewsPanel({
   };
 
   return (
-    <Card sx={{ height: '100%', borderRadius: 0.5 }}>
-      <CardContent sx={{ p: 0.75, '&:last-child': { pb: 0.75 } }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
-          <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem' }}>Aperçus</Typography>
+    <Card variant="outlined" sx={{ height: '100%', borderRadius: 1, display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 }, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1, flexShrink: 0 }}>
+          <Typography variant="body2" fontWeight={600}>Aperçus</Typography>
           <Button 
             variant="contained" 
             size="small" 
-            startIcon={<DownloadIcon sx={{ fontSize: 14 }} />} 
-            onClick={handleDownloadAll} 
-            sx={{ borderRadius: 0.5, textTransform: 'none', fontSize: '0.7rem', py: 0.25 }}
+            startIcon={<DownloadIcon fontSize="small" />} 
+            onClick={handleDownloadAll}
           >
             Tout télécharger
           </Button>
         </Stack>
 
-        <Stack spacing={0.75}>
-          {platforms.map((platform) => (
-            <PlatformPreview
-              key={platform.id}
-              platform={platform}
-              image={image}
-              textLayers={textLayers}
-              imageX={imageX}
-              imageY={imageY}
-              zoom={zoom}
-              averageColor={averageColor}
-              previewText={previewText}
-            />
-          ))}
-        </Stack>
+        <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+          <Stack spacing={1}>
+            {platforms.map((platform) => (
+              <PlatformPreview
+                key={platform.id}
+                platform={platform}
+                image={image}
+                textLayers={textLayers}
+                imageX={imageX}
+                imageY={imageY}
+                zoom={zoom}
+                averageColor={averageColor}
+                previewText={previewText}
+              />
+            ))}
+          </Stack>
+        </Box>
       </CardContent>
     </Card>
   );

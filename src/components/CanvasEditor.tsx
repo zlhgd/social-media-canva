@@ -1,7 +1,11 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Box, Card, CardContent } from '@mui/material';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import { Box, Card, CardContent, Stack, Button, ButtonGroup, Tooltip } from '@mui/material';
+import CropFreeIcon from '@mui/icons-material/CropFree';
+import FitScreenIcon from '@mui/icons-material/FitScreen';
+import AlignHorizontalCenterIcon from '@mui/icons-material/AlignHorizontalCenter';
+import AlignVerticalCenterIcon from '@mui/icons-material/AlignVerticalCenter';
 import { PlatformConfig } from '@/types';
 
 interface CanvasEditorProps {
@@ -30,10 +34,12 @@ interface ResizeState {
   y: number;
   imgX: number;
   imgY: number;
+  handleX: number;
+  handleY: number;
 }
 
 // Constants
-const ZOOM_SENSITIVITY = 0.15;
+const ZOOM_SENSITIVITY = 0.3;
 const MIN_ZOOM = 10;
 const MAX_ZOOM = 500;
 
@@ -52,11 +58,55 @@ export default function CanvasEditor({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<DragState>({ x: 0, y: 0, imgX: 0, imgY: 0 });
   const [activeHandle, setActiveHandle] = useState<ResizeHandle>(null);
-  const [resizeStart, setResizeStart] = useState<ResizeState>({ zoom: 100, x: 0, y: 0, imgX: 0, imgY: 0 });
+  const [resizeStart, setResizeStart] = useState<ResizeState>({ zoom: 100, x: 0, y: 0, imgX: 0, imgY: 0, handleX: 0, handleY: 0 });
 
-  // Full size canvas (no scaling)
+  // Calculate canvas size to fit all platforms with common center
+  // Use the max dimensions to show all frames
   const maxWidth = Math.max(...platforms.map(p => p.width));
   const maxHeight = Math.max(...platforms.map(p => p.height));
+  
+  // Calculate the canvas display scale to fit in viewport
+  const displayScale = useMemo(() => {
+    // Target max display size
+    const maxDisplayWidth = 600;
+    const maxDisplayHeight = 500;
+    const scaleX = maxDisplayWidth / maxWidth;
+    const scaleY = maxDisplayHeight / maxHeight;
+    return Math.min(scaleX, scaleY, 1);
+  }, [maxWidth, maxHeight]);
+
+  // Reset image to cover mode (image covers all frames)
+  const handleCoverMode = useCallback(() => {
+    if (!image) return;
+    // Calculate zoom to cover the largest frame
+    const scaleX = maxWidth / image.width;
+    const scaleY = maxHeight / image.height;
+    const coverZoom = Math.max(scaleX, scaleY) * 100;
+    onZoomChange(coverZoom);
+    onPositionChange(0, 0);
+  }, [image, maxWidth, maxHeight, onZoomChange, onPositionChange]);
+
+  // Reset image to fit/contain mode (image fits within frames)
+  const handleFitMode = useCallback(() => {
+    if (!image) return;
+    const minWidth = Math.min(...platforms.map(p => p.width));
+    const minHeight = Math.min(...platforms.map(p => p.height));
+    const scaleX = minWidth / image.width;
+    const scaleY = minHeight / image.height;
+    const fitZoom = Math.min(scaleX, scaleY) * 100;
+    onZoomChange(fitZoom);
+    onPositionChange(0, 0);
+  }, [image, platforms, onZoomChange, onPositionChange]);
+
+  // Center horizontally
+  const handleCenterH = useCallback(() => {
+    onPositionChange(0, imageY);
+  }, [imageY, onPositionChange]);
+
+  // Center vertically
+  const handleCenterV = useCallback(() => {
+    onPositionChange(imageX, 0);
+  }, [imageX, onPositionChange]);
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -65,31 +115,31 @@ export default function CanvasEditor({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Full size canvas
-    canvas.width = maxWidth;
-    canvas.height = maxHeight;
+    // Canvas at display scale
+    canvas.width = maxWidth * displayScale;
+    canvas.height = maxHeight * displayScale;
 
     ctx.fillStyle = averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const scale = zoom / 100;
+    const scale = (zoom / 100) * displayScale;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgX = (canvas.width / 2) + imageX - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + imageY - (imgHeight / 2);
+    const imgX = (canvas.width / 2) + (imageX * displayScale) - (imgWidth / 2);
+    const imgY = (canvas.height / 2) + (imageY * displayScale) - (imgHeight / 2);
 
-    // Draw semi-transparent outside frames
+    // Draw semi-transparent image (outside frames)
     ctx.save();
     ctx.globalAlpha = 0.3;
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
     ctx.restore();
 
-    // Draw full opacity inside frames
+    // Create clipping path from all platform frames
     ctx.save();
     ctx.beginPath();
     platforms.forEach((platform) => {
-      const frameWidth = platform.width;
-      const frameHeight = platform.height;
+      const frameWidth = platform.width * displayScale;
+      const frameHeight = platform.height * displayScale;
       const x = (canvas.width - frameWidth) / 2;
       const y = (canvas.height - frameHeight) / 2;
       ctx.rect(x, y, frameWidth, frameHeight);
@@ -100,8 +150,8 @@ export default function CanvasEditor({
 
     // Draw platform frames with labels
     platforms.forEach((platform) => {
-      const frameWidth = platform.width;
-      const frameHeight = platform.height;
+      const frameWidth = platform.width * displayScale;
+      const frameHeight = platform.height * displayScale;
       const x = (canvas.width - frameWidth) / 2;
       const y = (canvas.height - frameHeight) / 2;
 
@@ -111,22 +161,22 @@ export default function CanvasEditor({
 
       // Label
       ctx.fillStyle = platform.color;
-      ctx.font = '14px Inter, sans-serif';
+      ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       const label = platform.name;
       const labelPadding = 4;
       const labelMetrics = ctx.measureText(label);
-      ctx.fillRect(x, y, labelMetrics.width + labelPadding * 2, 20);
+      ctx.fillRect(x, y, labelMetrics.width + labelPadding * 2, 18);
       ctx.fillStyle = 'white';
       ctx.fillText(label, x + labelPadding, y + 3);
     });
 
     // Draw resize handles
-    const handleSize = 12;
+    const handleSize = 10;
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
 
     const handles = [
       { x: imgX, y: imgY },
@@ -141,13 +191,13 @@ export default function CanvasEditor({
       ctx.fill();
       ctx.stroke();
     });
-  }, [image, platforms, imageX, imageY, zoom, averageColor, maxWidth, maxHeight]);
+  }, [image, platforms, imageX, imageY, zoom, averageColor, maxWidth, maxHeight, displayScale]);
 
   useEffect(() => {
     render();
   }, [render]);
 
-  // Convert client coordinates to canvas coordinates
+  // Convert client coordinates to canvas coordinates (accounting for display scale)
   const getCanvasCoords = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -156,23 +206,22 @@ export default function CanvasEditor({
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
+    // Return coordinates in the original (unscaled) coordinate system
     return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY,
+      x: ((clientX - rect.left) * scaleX) / displayScale,
+      y: ((clientY - rect.top) * scaleY) / displayScale,
     };
-  }, []);
+  }, [displayScale]);
 
   const getHandleAtPosition = useCallback((canvasX: number, canvasY: number): ResizeHandle => {
     const scale = zoom / 100;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
 
-    const imgPosX = (canvas.width / 2) + imageX - (imgWidth / 2);
-    const imgPosY = (canvas.height / 2) + imageY - (imgHeight / 2);
+    const imgPosX = (maxWidth / 2) + imageX - (imgWidth / 2);
+    const imgPosY = (maxHeight / 2) + imageY - (imgHeight / 2);
 
-    const handleSize = 20;
+    const handleSize = 15; // Hit detection radius
     const handles: { pos: ResizeHandle; x: number; y: number }[] = [
       { pos: 'nw', x: imgPosX, y: imgPosY },
       { pos: 'ne', x: imgPosX + imgWidth, y: imgPosY },
@@ -186,67 +235,125 @@ export default function CanvasEditor({
       }
     }
     return null;
-  }, [image, imageX, imageY, zoom]);
+  }, [image, imageX, imageY, zoom, maxWidth, maxHeight]);
+
+  // Get the position of a handle in original coordinates
+  const getHandlePosition = useCallback((handle: ResizeHandle) => {
+    const scale = zoom / 100;
+    const imgWidth = image.width * scale;
+    const imgHeight = image.height * scale;
+    const imgPosX = (maxWidth / 2) + imageX - (imgWidth / 2);
+    const imgPosY = (maxHeight / 2) + imageY - (imgHeight / 2);
+
+    switch (handle) {
+      case 'nw': return { x: imgPosX, y: imgPosY };
+      case 'ne': return { x: imgPosX + imgWidth, y: imgPosY };
+      case 'sw': return { x: imgPosX, y: imgPosY + imgHeight };
+      case 'se': return { x: imgPosX + imgWidth, y: imgPosY + imgHeight };
+      default: return { x: 0, y: 0 };
+    }
+  }, [image, imageX, imageY, zoom, maxWidth, maxHeight]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const canvasPos = getCanvasCoords(e.clientX, e.clientY);
     const handle = getHandleAtPosition(canvasPos.x, canvasPos.y);
 
     if (handle) {
+      const handlePos = getHandlePosition(handle);
       setActiveHandle(handle);
-      setResizeStart({ zoom, x: canvasPos.x, y: canvasPos.y, imgX: imageX, imgY: imageY });
+      setResizeStart({ 
+        zoom, 
+        x: canvasPos.x, 
+        y: canvasPos.y, 
+        imgX: imageX, 
+        imgY: imageY,
+        handleX: handlePos.x,
+        handleY: handlePos.y,
+      });
     } else {
       setIsDragging(true);
       setDragStart({ x: canvasPos.x, y: canvasPos.y, imgX: imageX, imgY: imageY });
     }
-  }, [imageX, imageY, zoom, getCanvasCoords, getHandleAtPosition]);
+  }, [imageX, imageY, zoom, getCanvasCoords, getHandleAtPosition, getHandlePosition]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const canvasPos = getCanvasCoords(e.clientX, e.clientY);
     
     if (activeHandle) {
-      // Calculate diagonal distance for zoom
+      // Calculate the delta from the handle's initial position
       const deltaX = canvasPos.x - resizeStart.x;
       const deltaY = canvasPos.y - resizeStart.y;
       
-      // Use the diagonal direction based on which handle is being dragged
+      // Calculate diagonal distance for zoom based on which corner is being dragged
       let delta = 0;
       if (activeHandle === 'se') delta = (deltaX + deltaY) / 2;
       else if (activeHandle === 'nw') delta = -(deltaX + deltaY) / 2;
       else if (activeHandle === 'ne') delta = (deltaX - deltaY) / 2;
       else if (activeHandle === 'sw') delta = (-deltaX + deltaY) / 2;
       
+      // Scale the delta by sensitivity factor
       let newZoom = resizeStart.zoom + delta * ZOOM_SENSITIVITY;
       newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
 
       if (e.shiftKey) {
-        // Resize from center - just update zoom
+        // Resize from center - just update zoom, keep position
         onZoomChange(newZoom);
       } else {
-        // Keep opposite corner fixed
-        const newScale = newZoom / 100;
+        // Keep the OPPOSITE corner fixed
+        // Calculate where the opposite corner is in the original state
         const oldScale = resizeStart.zoom / 100;
-        const scaleDiff = newScale - oldScale;
+        const newScale = newZoom / 100;
         
-        let offsetX = 0, offsetY = 0;
+        const oldImgWidth = image.width * oldScale;
+        const oldImgHeight = image.height * oldScale;
+        const newImgWidth = image.width * newScale;
+        const newImgHeight = image.height * newScale;
         
-        // Calculate offset to keep opposite corner in place
+        // Get opposite corner position (fixed point)
+        let fixedX: number, fixedY: number;
         if (activeHandle === 'nw') {
-          offsetX = image.width * scaleDiff / 2;
-          offsetY = image.height * scaleDiff / 2;
+          // Fixed point is SE corner
+          fixedX = resizeStart.handleX + oldImgWidth;
+          fixedY = resizeStart.handleY + oldImgHeight;
         } else if (activeHandle === 'ne') {
-          offsetX = -image.width * scaleDiff / 2;
-          offsetY = image.height * scaleDiff / 2;
+          // Fixed point is SW corner
+          fixedX = resizeStart.handleX - oldImgWidth;
+          fixedY = resizeStart.handleY + oldImgHeight;
         } else if (activeHandle === 'sw') {
-          offsetX = image.width * scaleDiff / 2;
-          offsetY = -image.height * scaleDiff / 2;
-        } else if (activeHandle === 'se') {
-          offsetX = -image.width * scaleDiff / 2;
-          offsetY = -image.height * scaleDiff / 2;
+          // Fixed point is NE corner
+          fixedX = resizeStart.handleX + oldImgWidth;
+          fixedY = resizeStart.handleY - oldImgHeight;
+        } else {
+          // Fixed point is NW corner (SE handle)
+          fixedX = resizeStart.handleX - oldImgWidth;
+          fixedY = resizeStart.handleY - oldImgHeight;
+        }
+        
+        // Calculate where the image center should be to keep the fixed point in place
+        // Fixed point position relative to new image
+        let newImgX: number, newImgY: number;
+        if (activeHandle === 'nw') {
+          // New NW corner should be at (fixedX - newImgWidth, fixedY - newImgHeight)
+          // Image center = NW corner + (width/2, height/2)
+          newImgX = (fixedX - newImgWidth + newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY - newImgHeight + newImgHeight/2) - maxHeight/2;
+        } else if (activeHandle === 'ne') {
+          // New NE corner X = fixedX + newImgWidth, Y = fixedY - newImgHeight
+          newImgX = (fixedX + newImgWidth - newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY - newImgHeight + newImgHeight/2) - maxHeight/2;
+        } else if (activeHandle === 'sw') {
+          // New SW corner X = fixedX - newImgWidth, Y = fixedY + newImgHeight
+          newImgX = (fixedX - newImgWidth + newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY + newImgHeight - newImgHeight/2) - maxHeight/2;
+        } else {
+          // SE handle - NW corner is fixed
+          // New center = fixed point + (newImgWidth/2, newImgHeight/2)
+          newImgX = (fixedX + newImgWidth/2) - maxWidth/2;
+          newImgY = (fixedY + newImgHeight/2) - maxHeight/2;
         }
 
         onZoomChange(newZoom);
-        onPositionChange(resizeStart.imgX + offsetX, resizeStart.imgY + offsetY);
+        onPositionChange(newImgX, newImgY);
       }
     } else if (isDragging) {
       // Direct position update based on canvas coordinate change
@@ -263,7 +370,7 @@ export default function CanvasEditor({
         else canvas.style.cursor = 'grab';
       }
     }
-  }, [activeHandle, isDragging, dragStart, resizeStart, image, getCanvasCoords, getHandleAtPosition, onZoomChange, onPositionChange]);
+  }, [activeHandle, isDragging, dragStart, resizeStart, image, maxWidth, maxHeight, getCanvasCoords, getHandleAtPosition, onZoomChange, onPositionChange]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -276,13 +383,22 @@ export default function CanvasEditor({
     const handle = getHandleAtPosition(canvasPos.x, canvasPos.y);
 
     if (handle) {
+      const handlePos = getHandlePosition(handle);
       setActiveHandle(handle);
-      setResizeStart({ zoom, x: canvasPos.x, y: canvasPos.y, imgX: imageX, imgY: imageY });
+      setResizeStart({ 
+        zoom, 
+        x: canvasPos.x, 
+        y: canvasPos.y, 
+        imgX: imageX, 
+        imgY: imageY,
+        handleX: handlePos.x,
+        handleY: handlePos.y,
+      });
     } else {
       setIsDragging(true);
       setDragStart({ x: canvasPos.x, y: canvasPos.y, imgX: imageX, imgY: imageY });
     }
-  }, [imageX, imageY, zoom, getCanvasCoords, getHandleAtPosition]);
+  }, [imageX, imageY, zoom, getCanvasCoords, getHandleAtPosition, getHandlePosition]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -300,6 +416,8 @@ export default function CanvasEditor({
       
       let newZoom = resizeStart.zoom + delta * ZOOM_SENSITIVITY;
       newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+      
+      // For touch, resize from center (similar to shift behavior)
       onZoomChange(newZoom);
     } else if (isDragging) {
       const deltaX = canvasPos.x - dragStart.x;
@@ -314,35 +432,64 @@ export default function CanvasEditor({
   }, []);
 
   return (
-    <Card sx={{ borderRadius: 0.5 }}>
+    <Card variant="outlined" sx={{ borderRadius: 1 }}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
-        <Box
-          ref={containerRef}
-          sx={{
-            backgroundColor: '#f5f5f5',
-            borderRadius: 0.5,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            overflow: 'auto',
-            maxHeight: '70vh',
-          }}
-        >
-          <canvas
-            ref={canvasRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{
-              display: 'block',
-              cursor: isDragging ? 'grabbing' : 'grab',
+        <Stack spacing={1}>
+          {/* Control buttons */}
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <ButtonGroup size="small" variant="outlined">
+              <Tooltip title="Couverture (remplir tous les cadres)">
+                <Button onClick={handleCoverMode}>
+                  <CropFreeIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Contenu (image visible entièrement)">
+                <Button onClick={handleFitMode}>
+                  <FitScreenIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+            </ButtonGroup>
+            <ButtonGroup size="small" variant="outlined">
+              <Tooltip title="Centrer horizontalement">
+                <Button onClick={handleCenterH}>
+                  <AlignHorizontalCenterIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Centrer verticalement">
+                <Button onClick={handleCenterV}>
+                  <AlignVerticalCenterIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+            </ButtonGroup>
+          </Stack>
+
+          <Box
+            ref={containerRef}
+            sx={{
+              backgroundColor: '#f0f0f0',
+              borderRadius: 1,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'auto',
             }}
-          />
-        </Box>
+          >
+            <canvas
+              ref={canvasRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                display: 'block',
+                cursor: isDragging ? 'grabbing' : 'grab',
+              }}
+            />
+          </Box>
+        </Stack>
       </CardContent>
     </Card>
   );
