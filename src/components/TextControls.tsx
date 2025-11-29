@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -77,29 +77,37 @@ export default function TextControls({
   const [styleName, setStyleName] = useState('');
   const [editingLayerId, setEditingLayerId] = useState<number | null>(null);
 
+  // Helper to create shadow object
+  const createShadow = useCallback(() => ({
+    enabled: shadowEnabled,
+    color: shadowColor,
+    blur: shadowBlur,
+    offsetX: shadowOffsetX,
+    offsetY: shadowOffsetY,
+  }), [shadowEnabled, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY]);
+
+  // Helper to create layer data
+  const createLayerData = useCallback((): Omit<TextLayer, 'id'> => ({
+    text: text.trim(),
+    fontFamily,
+    fontSize,
+    color,
+    backgroundColor,
+    padding,
+    borderRadius,
+    isBold: styles.includes('bold'),
+    isItalic: styles.includes('italic'),
+    verticalAlign,
+    distanceFromEdge,
+    shadow: createShadow(),
+  }), [text, fontFamily, fontSize, color, backgroundColor, padding, borderRadius, styles, verticalAlign, distanceFromEdge, createShadow]);
+
   // Send preview updates in real-time
   useEffect(() => {
     if (onPreviewChange) {
-      if (text.trim()) {
-        onPreviewChange({
-          text: text.trim(),
-          fontFamily,
-          fontSize,
-          color,
-          backgroundColor,
-          padding,
-          borderRadius,
-          isBold: styles.includes('bold'),
-          isItalic: styles.includes('italic'),
-          verticalAlign,
-          distanceFromEdge,
-          shadow: { enabled: shadowEnabled, color: shadowColor, blur: shadowBlur, offsetX: shadowOffsetX, offsetY: shadowOffsetY },
-        });
-      } else {
-        onPreviewChange(null);
-      }
+      onPreviewChange(text.trim() ? createLayerData() : null);
     }
-  }, [text, fontFamily, fontSize, color, backgroundColor, padding, borderRadius, styles, verticalAlign, distanceFromEdge, shadowEnabled, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY, onPreviewChange]);
+  }, [text, createLayerData, onPreviewChange]);
 
   const resetForm = () => {
     setText('');
@@ -125,28 +133,13 @@ export default function TextControls({
     setEditingLayerId(layer.id);
   };
 
-  const getCurrentLayerData = (): Omit<TextLayer, 'id'> => ({
-    text: text.trim(),
-    fontFamily,
-    fontSize,
-    color,
-    backgroundColor,
-    padding,
-    borderRadius,
-    isBold: styles.includes('bold'),
-    isItalic: styles.includes('italic'),
-    verticalAlign,
-    distanceFromEdge,
-    shadow: { enabled: shadowEnabled, color: shadowColor, blur: shadowBlur, offsetX: shadowOffsetX, offsetY: shadowOffsetY },
-  });
-
   const handleSubmit = () => {
     if (!text.trim()) return;
 
     if (editingLayerId !== null) {
-      onUpdateLayer(editingLayerId, getCurrentLayerData());
+      onUpdateLayer(editingLayerId, createLayerData());
     } else {
-      onAddLayer(getCurrentLayerData());
+      onAddLayer(createLayerData());
     }
     resetForm();
   };
@@ -167,7 +160,7 @@ export default function TextControls({
       borderRadius,
       isBold: styles.includes('bold'),
       isItalic: styles.includes('italic'),
-      shadow: { enabled: shadowEnabled, color: shadowColor, blur: shadowBlur, offsetX: shadowOffsetX, offsetY: shadowOffsetY },
+      shadow: createShadow(),
     });
     setStyleName('');
     setSaveStyleDialogOpen(false);

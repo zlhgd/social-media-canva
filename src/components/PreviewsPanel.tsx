@@ -6,6 +6,9 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { PlatformConfig, TextLayer } from '@/types';
 import { drawTextLayer, doesImageCoverCanvas } from '@/lib/canvas-utils';
 
+// ID used for preview text layer (not yet added)
+const PREVIEW_TEXT_ID = -1;
+
 interface PreviewsPanelProps {
   image: HTMLImageElement;
   platforms: PlatformConfig[];
@@ -69,7 +72,7 @@ function PlatformPreview({
     // Draw preview text (being edited) with slight transparency
     if (previewText) {
       ctx.globalAlpha = 0.8;
-      drawTextLayer(ctx, { ...previewText, id: -1 }, canvas.width, canvas.height, 1);
+      drawTextLayer(ctx, { ...previewText, id: PREVIEW_TEXT_ID }, canvas.width, canvas.height, 1);
       ctx.globalAlpha = 1;
     }
   }, [image, platform, textLayers, imageX, imageY, zoom, averageColor, previewText]);
