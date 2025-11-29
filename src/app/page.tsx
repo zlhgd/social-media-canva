@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Stack,
-  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -123,16 +122,16 @@ export default function Home() {
   }, []);
 
   return (
-    <Box sx={{ height: '100vh', backgroundColor: '#fafafa', p: 1, display: 'flex', flexDirection: 'column' }}>
-      <Container maxWidth="xl" disableGutters sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', p: 1 }}>
+      <Container maxWidth="xl" disableGutters>
         {!image ? (
           <ImageUploader onImageLoad={handleImageLoad} />
         ) : (
-          <Grid container spacing={1} sx={{ flexGrow: 1, overflow: 'hidden' }}>
-            {/* Left Column - Editor (scrollable within itself) */}
-            <Grid size={{ xs: 12, lg: 5 }} sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <Stack spacing={1} sx={{ height: '100%', overflow: 'auto' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* Left Column - Editor (takes remaining space) */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Stack spacing={1}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Button
                     variant="outlined"
                     size="small"
@@ -173,10 +172,10 @@ export default function Home() {
                   onPreviewChange={handlePreviewChange}
                 />
               </Stack>
-            </Grid>
+            </Box>
 
-            {/* Right Column - Previews (scrollable) */}
-            <Grid size={{ xs: 12, lg: 7 }} sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Right Column - Previews (fixed 360px width) */}
+            <Box sx={{ width: 360, flexShrink: 0 }}>
               <PreviewsPanel
                 image={image}
                 platforms={platforms}
@@ -187,8 +186,8 @@ export default function Home() {
                 averageColor={averageColor}
                 previewText={previewText}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         )}
 
         {/* Platform Configuration Dialog */}

@@ -44,8 +44,7 @@ const MIN_ZOOM = 10;
 const MAX_ZOOM = 500;
 const HANDLE_SIZE = 10; // Visual size of resize handles
 const HANDLE_HIT_AREA = 15; // Hit detection area (slightly larger for easier interaction)
-const MAX_DISPLAY_WIDTH = 600;
-const MAX_DISPLAY_HEIGHT = 500;
+const REFERENCE_SIZE = 400; // Reference size for ratio-based frame display
 
 export default function CanvasEditor({
   image,
@@ -64,17 +63,39 @@ export default function CanvasEditor({
   const [activeHandle, setActiveHandle] = useState<ResizeHandle>(null);
   const [resizeStart, setResizeStart] = useState<ResizeState>({ zoom: 100, x: 0, y: 0, imgX: 0, imgY: 0, handleX: 0, handleY: 0 });
 
-  // Calculate canvas size to fit all platforms with common center
-  // Use the max dimensions to show all frames
+  // Calculate normalized frame dimensions based on aspect ratio
+  // Frames with the same aspect ratio will have the same display size
+  const normalizedFrames = useMemo(() => {
+    return platforms.map(p => {
+      const aspectRatio = p.width / p.height;
+      // Normalize so that the larger dimension equals REFERENCE_SIZE
+      let displayWidth, displayHeight;
+      if (aspectRatio >= 1) {
+        // Landscape or square
+        displayWidth = REFERENCE_SIZE;
+        displayHeight = REFERENCE_SIZE / aspectRatio;
+      } else {
+        // Portrait
+        displayHeight = REFERENCE_SIZE;
+        displayWidth = REFERENCE_SIZE * aspectRatio;
+      }
+      return {
+        ...p,
+        displayWidth,
+        displayHeight,
+        // Scale factor to convert from display coordinates to original coordinates
+        scaleFactor: p.width / displayWidth,
+      };
+    });
+  }, [platforms]);
+
+  // Calculate canvas size to fit all normalized frames
+  const maxDisplayWidth = Math.max(...normalizedFrames.map(f => f.displayWidth));
+  const maxDisplayHeight = Math.max(...normalizedFrames.map(f => f.displayHeight));
+
+  // Get the max original dimensions for calculations
   const maxWidth = Math.max(...platforms.map(p => p.width));
   const maxHeight = Math.max(...platforms.map(p => p.height));
-  
-  // Calculate the canvas display scale to fit in viewport
-  const displayScale = useMemo(() => {
-    const scaleX = MAX_DISPLAY_WIDTH / maxWidth;
-    const scaleY = MAX_DISPLAY_HEIGHT / maxHeight;
-    return Math.min(scaleX, scaleY, 1);
-  }, [maxWidth, maxHeight]);
 
   // Reset image to cover mode (image covers all frames)
   const handleCoverMode = useCallback(() => {
@@ -116,18 +137,23 @@ export default function CanvasEditor({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Canvas at display scale
-    canvas.width = maxWidth * displayScale;
-    canvas.height = maxHeight * displayScale;
+    // Canvas uses normalized display dimensions
+    canvas.width = maxDisplayWidth;
+    canvas.height = maxDisplayHeight;
 
     ctx.fillStyle = averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const scale = (zoom / 100) * displayScale;
+    // For image rendering, we need to use a common scale across all platforms
+    // Use the largest platform's scale factor as reference
+    const referenceFrame = normalizedFrames[0];
+    const imageDisplayScale = 1 / referenceFrame.scaleFactor;
+    
+    const scale = (zoom / 100) * imageDisplayScale;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgX = (canvas.width / 2) + (imageX * displayScale) - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + (imageY * displayScale) - (imgHeight / 2);
+    const imgX = (canvas.width / 2) + (imageX * imageDisplayScale) - (imgWidth / 2);
+    const imgY = (canvas.height / 2) + (imageY * imageDisplayScale) - (imgHeight / 2);
 
     // Draw semi-transparent image (outside frames)
     ctx.save();
@@ -135,37 +161,33 @@ export default function CanvasEditor({
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
     ctx.restore();
 
-    // Create clipping path from all platform frames
+    // Create clipping path from all normalized platform frames
     ctx.save();
     ctx.beginPath();
-    platforms.forEach((platform) => {
-      const frameWidth = platform.width * displayScale;
-      const frameHeight = platform.height * displayScale;
-      const x = (canvas.width - frameWidth) / 2;
-      const y = (canvas.height - frameHeight) / 2;
-      ctx.rect(x, y, frameWidth, frameHeight);
+    normalizedFrames.forEach((frame) => {
+      const x = (canvas.width - frame.displayWidth) / 2;
+      const y = (canvas.height - frame.displayHeight) / 2;
+      ctx.rect(x, y, frame.displayWidth, frame.displayHeight);
     });
     ctx.clip();
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
     ctx.restore();
 
     // Draw platform frames with labels
-    platforms.forEach((platform) => {
-      const frameWidth = platform.width * displayScale;
-      const frameHeight = platform.height * displayScale;
-      const x = (canvas.width - frameWidth) / 2;
-      const y = (canvas.height - frameHeight) / 2;
+    normalizedFrames.forEach((frame) => {
+      const x = (canvas.width - frame.displayWidth) / 2;
+      const y = (canvas.height - frame.displayHeight) / 2;
 
-      ctx.strokeStyle = platform.color;
+      ctx.strokeStyle = frame.color;
       ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, frameWidth, frameHeight);
+      ctx.strokeRect(x, y, frame.displayWidth, frame.displayHeight);
 
       // Label
-      ctx.fillStyle = platform.color;
+      ctx.fillStyle = frame.color;
       ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      const label = platform.name;
+      const label = frame.name;
       const labelPadding = 4;
       const labelMetrics = ctx.measureText(label);
       ctx.fillRect(x, y, labelMetrics.width + labelPadding * 2, 18);
@@ -191,13 +213,14 @@ export default function CanvasEditor({
       ctx.fill();
       ctx.stroke();
     });
-  }, [image, platforms, imageX, imageY, zoom, averageColor, maxWidth, maxHeight, displayScale]);
+  }, [image, normalizedFrames, imageX, imageY, zoom, averageColor, maxDisplayWidth, maxDisplayHeight]);
 
   useEffect(() => {
     render();
   }, [render]);
 
-  // Convert client coordinates to canvas coordinates (accounting for display scale)
+  // Convert client coordinates to canvas coordinates
+  // Returns coordinates in the display coordinate system
   const getCanvasCoords = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -206,20 +229,25 @@ export default function CanvasEditor({
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    // Return coordinates in the original (unscaled) coordinate system
     return {
-      x: ((clientX - rect.left) * scaleX) / displayScale,
-      y: ((clientY - rect.top) * scaleY) / displayScale,
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
     };
-  }, [displayScale]);
+  }, []);
+
+  // Get the reference frame's image display scale
+  const imageDisplayScale = useMemo(() => {
+    if (normalizedFrames.length === 0) return 1;
+    return 1 / normalizedFrames[0].scaleFactor;
+  }, [normalizedFrames]);
 
   const getHandleAtPosition = useCallback((canvasX: number, canvasY: number): ResizeHandle => {
-    const scale = zoom / 100;
+    const scale = (zoom / 100) * imageDisplayScale;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
 
-    const imgPosX = (maxWidth / 2) + imageX - (imgWidth / 2);
-    const imgPosY = (maxHeight / 2) + imageY - (imgHeight / 2);
+    const imgPosX = (maxDisplayWidth / 2) + (imageX * imageDisplayScale) - (imgWidth / 2);
+    const imgPosY = (maxDisplayHeight / 2) + (imageY * imageDisplayScale) - (imgHeight / 2);
 
     // HANDLE_HIT_AREA is larger than HANDLE_SIZE for easier interaction
     const handles: { pos: ResizeHandle; x: number; y: number }[] = [
@@ -235,15 +263,15 @@ export default function CanvasEditor({
       }
     }
     return null;
-  }, [image, imageX, imageY, zoom, maxWidth, maxHeight]);
+  }, [image, imageX, imageY, zoom, maxDisplayWidth, maxDisplayHeight, imageDisplayScale]);
 
-  // Get the position of a handle in original coordinates
+  // Get the position of a handle in display coordinates
   const getHandlePosition = useCallback((handle: ResizeHandle) => {
-    const scale = zoom / 100;
+    const scale = (zoom / 100) * imageDisplayScale;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgPosX = (maxWidth / 2) + imageX - (imgWidth / 2);
-    const imgPosY = (maxHeight / 2) + imageY - (imgHeight / 2);
+    const imgPosX = (maxDisplayWidth / 2) + (imageX * imageDisplayScale) - (imgWidth / 2);
+    const imgPosY = (maxDisplayHeight / 2) + (imageY * imageDisplayScale) - (imgHeight / 2);
 
     switch (handle) {
       case 'nw': return { x: imgPosX, y: imgPosY };
@@ -252,7 +280,7 @@ export default function CanvasEditor({
       case 'se': return { x: imgPosX + imgWidth, y: imgPosY + imgHeight };
       default: return { x: 0, y: 0 };
     }
-  }, [image, imageX, imageY, zoom, maxWidth, maxHeight]);
+  }, [image, imageX, imageY, zoom, maxDisplayWidth, maxDisplayHeight, imageDisplayScale]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const canvasPos = getCanvasCoords(e.clientX, e.clientY);
@@ -280,7 +308,7 @@ export default function CanvasEditor({
     const canvasPos = getCanvasCoords(e.clientX, e.clientY);
     
     if (activeHandle) {
-      // Calculate the delta from the handle's initial position
+      // Calculate the delta from the handle's initial position (in display coords)
       const deltaX = canvasPos.x - resizeStart.x;
       const deltaY = canvasPos.y - resizeStart.y;
       
@@ -295,8 +323,8 @@ export default function CanvasEditor({
       else if (activeHandle === 'ne') delta = (deltaX - deltaY) / 2;
       else if (activeHandle === 'sw') delta = (-deltaX + deltaY) / 2;
       
-      // Scale the delta by sensitivity factor
-      let newZoom = resizeStart.zoom + delta * ZOOM_SENSITIVITY;
+      // Scale the delta by sensitivity factor (adjust for display scale)
+      let newZoom = resizeStart.zoom + (delta / imageDisplayScale) * ZOOM_SENSITIVITY;
       newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
 
       if (e.shiftKey) {
@@ -304,63 +332,59 @@ export default function CanvasEditor({
         onZoomChange(newZoom);
       } else {
         // Anchor the opposite corner (keep it fixed while resizing)
-        const oldScale = resizeStart.zoom / 100;
-        const newScale = newZoom / 100;
+        // Work in display coordinates, then convert back
+        const oldScale = (resizeStart.zoom / 100) * imageDisplayScale;
+        const newScale = (newZoom / 100) * imageDisplayScale;
         
         const oldImgWidth = image.width * oldScale;
         const oldImgHeight = image.height * oldScale;
         const newImgWidth = image.width * newScale;
         const newImgHeight = image.height * newScale;
         
-        // Calculate the position of the fixed (opposite) corner in original coordinates
-        // Each handle has a diagonally opposite corner that stays anchored
+        // Calculate the position of the fixed (opposite) corner in display coordinates
         let fixedX: number, fixedY: number;
         if (activeHandle === 'nw') {
-          // Dragging NW -> SE corner stays fixed
           fixedX = resizeStart.handleX + oldImgWidth;
           fixedY = resizeStart.handleY + oldImgHeight;
         } else if (activeHandle === 'ne') {
-          // Dragging NE -> SW corner stays fixed
           fixedX = resizeStart.handleX - oldImgWidth;
           fixedY = resizeStart.handleY + oldImgHeight;
         } else if (activeHandle === 'sw') {
-          // Dragging SW -> NE corner stays fixed
           fixedX = resizeStart.handleX + oldImgWidth;
           fixedY = resizeStart.handleY - oldImgHeight;
         } else {
-          // Dragging SE -> NW corner stays fixed
           fixedX = resizeStart.handleX - oldImgWidth;
           fixedY = resizeStart.handleY - oldImgHeight;
         }
         
-        // Calculate the new image center position so that the fixed corner stays in place
-        // The image center is calculated from the fixed corner + half the new image dimensions
-        let newImgX: number, newImgY: number;
+        // Calculate new image center in display coords
+        let newCenterX: number, newCenterY: number;
         if (activeHandle === 'nw') {
-          // NW moves, SE stays -> image center is SE corner - half dimensions
-          newImgX = (fixedX - newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY - newImgHeight/2) - maxHeight/2;
+          newCenterX = fixedX - newImgWidth/2;
+          newCenterY = fixedY - newImgHeight/2;
         } else if (activeHandle === 'ne') {
-          // NE moves, SW stays -> image center is SW corner + (width/2, -height/2)
-          newImgX = (fixedX + newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY - newImgHeight/2) - maxHeight/2;
+          newCenterX = fixedX + newImgWidth/2;
+          newCenterY = fixedY - newImgHeight/2;
         } else if (activeHandle === 'sw') {
-          // SW moves, NE stays -> image center is NE corner + (-width/2, height/2)
-          newImgX = (fixedX - newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY + newImgHeight/2) - maxHeight/2;
+          newCenterX = fixedX - newImgWidth/2;
+          newCenterY = fixedY + newImgHeight/2;
         } else {
-          // SE moves, NW stays -> image center is NW corner + half dimensions
-          newImgX = (fixedX + newImgWidth/2) - maxWidth/2;
-          newImgY = (fixedY + newImgHeight/2) - maxHeight/2;
+          newCenterX = fixedX + newImgWidth/2;
+          newCenterY = fixedY + newImgHeight/2;
         }
+
+        // Convert to original coordinates
+        const newImgX = (newCenterX - maxDisplayWidth/2) / imageDisplayScale;
+        const newImgY = (newCenterY - maxDisplayHeight/2) / imageDisplayScale;
 
         onZoomChange(newZoom);
         onPositionChange(newImgX, newImgY);
       }
     } else if (isDragging) {
       // Direct position update based on canvas coordinate change
-      const deltaX = canvasPos.x - dragStart.x;
-      const deltaY = canvasPos.y - dragStart.y;
+      // Convert display deltas to original coordinates
+      const deltaX = (canvasPos.x - dragStart.x) / imageDisplayScale;
+      const deltaY = (canvasPos.y - dragStart.y) / imageDisplayScale;
       onPositionChange(dragStart.imgX + deltaX, dragStart.imgY + deltaY);
     } else {
       // Update cursor based on hover
@@ -372,7 +396,7 @@ export default function CanvasEditor({
         else canvas.style.cursor = 'grab';
       }
     }
-  }, [activeHandle, isDragging, dragStart, resizeStart, image, maxWidth, maxHeight, getCanvasCoords, getHandleAtPosition, onZoomChange, onPositionChange]);
+  }, [activeHandle, isDragging, dragStart, resizeStart, image, maxDisplayWidth, maxDisplayHeight, imageDisplayScale, getCanvasCoords, getHandleAtPosition, onZoomChange, onPositionChange]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -416,17 +440,17 @@ export default function CanvasEditor({
       else if (activeHandle === 'ne') delta = (deltaX - deltaY) / 2;
       else if (activeHandle === 'sw') delta = (-deltaX + deltaY) / 2;
       
-      let newZoom = resizeStart.zoom + delta * ZOOM_SENSITIVITY;
+      let newZoom = resizeStart.zoom + (delta / imageDisplayScale) * ZOOM_SENSITIVITY;
       newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
       
       // For touch, resize from center (similar to shift behavior)
       onZoomChange(newZoom);
     } else if (isDragging) {
-      const deltaX = canvasPos.x - dragStart.x;
-      const deltaY = canvasPos.y - dragStart.y;
+      const deltaX = (canvasPos.x - dragStart.x) / imageDisplayScale;
+      const deltaY = (canvasPos.y - dragStart.y) / imageDisplayScale;
       onPositionChange(dragStart.imgX + deltaX, dragStart.imgY + deltaY);
     }
-  }, [activeHandle, isDragging, dragStart, resizeStart, getCanvasCoords, onZoomChange, onPositionChange]);
+  }, [activeHandle, isDragging, dragStart, resizeStart, imageDisplayScale, getCanvasCoords, onZoomChange, onPositionChange]);
 
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
@@ -468,7 +492,7 @@ export default function CanvasEditor({
           <Box
             ref={containerRef}
             sx={{
-              backgroundColor: '#f0f0f0',
+              bgcolor: 'grey.200',
               borderRadius: 1,
               display: 'flex',
               justifyContent: 'center',

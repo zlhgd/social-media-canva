@@ -137,7 +137,7 @@ function PlatformPreview({
             Télécharger
           </Button>
         </Stack>
-        <Box sx={{ backgroundColor: '#f0f0f0', borderRadius: 1, p: 0.5 }}>
+        <Box sx={{ bgcolor: 'grey.200', borderRadius: 1, p: 0.5 }}>
           <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: 'auto' }} />
         </Box>
       </CardContent>
@@ -198,9 +198,9 @@ export default function PreviewsPanel({
   };
 
   return (
-    <Card variant="outlined" sx={{ height: '100%', borderRadius: 1, display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 }, display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1, flexShrink: 0 }}>
+    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
           <Typography variant="body2" fontWeight={600}>Aperçus</Typography>
           <Button 
             variant="contained" 
@@ -212,23 +212,21 @@ export default function PreviewsPanel({
           </Button>
         </Stack>
 
-        <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-          <Stack spacing={1}>
-            {platforms.map((platform) => (
-              <PlatformPreview
-                key={platform.id}
-                platform={platform}
-                image={image}
-                textLayers={textLayers}
-                imageX={imageX}
-                imageY={imageY}
-                zoom={zoom}
-                averageColor={averageColor}
-                previewText={previewText}
-              />
-            ))}
-          </Stack>
-        </Box>
+        <Stack spacing={1}>
+          {platforms.map((platform) => (
+            <PlatformPreview
+              key={platform.id}
+              platform={platform}
+              image={image}
+              textLayers={textLayers}
+              imageX={imageX}
+              imageY={imageY}
+              zoom={zoom}
+              averageColor={averageColor}
+              previewText={previewText}
+            />
+          ))}
+        </Stack>
       </CardContent>
     </Card>
   );

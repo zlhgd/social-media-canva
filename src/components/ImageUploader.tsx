@@ -88,12 +88,12 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
         borderRadius: 4,
         p: 8,
         textAlign: 'center',
-        backgroundColor: isDragOver ? 'rgba(99, 102, 241, 0.05)' : 'background.paper',
+        bgcolor: isDragOver ? 'primary.light' : 'background.paper',
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
+        transition: (theme) => theme.transitions.create(['border-color', 'background-color']),
         '&:hover': {
           borderColor: 'primary.main',
-          backgroundColor: 'rgba(99, 102, 241, 0.05)',
+          bgcolor: 'primary.light',
         },
       }}
     >

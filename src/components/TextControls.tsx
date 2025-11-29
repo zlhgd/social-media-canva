@@ -207,7 +207,7 @@ export default function TextControls({
     <Card variant="outlined" sx={{ borderRadius: 1 }}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-          Texte {editingLayerId !== null && <span style={{ fontWeight: 400, color: '#666' }}>(modification en cours)</span>}
+          Texte {editingLayerId !== null && <Typography component="span" variant="body2" color="text.secondary">(modification en cours)</Typography>}
         </Typography>
 
         {textStyles.length > 0 && (
@@ -257,8 +257,8 @@ export default function TextControls({
             />
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#666' }}>Texte</Typography>
-              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer', padding: 0 }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>Texte</Typography>
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
             </Box>
 
             <ToggleButtonGroup value={styles} onChange={handleStyleChange} size="small">
@@ -276,7 +276,7 @@ export default function TextControls({
             />
             {showBackground && (
               <>
-                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer', padding: 0 }} />
+                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
                 <TextField 
                   type="number" 
                   size="small" 
@@ -331,7 +331,7 @@ export default function TextControls({
             />
             {shadowEnabled && (
               <>
-                <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 2, cursor: 'pointer', padding: 0 }} />
+                <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
                 <TextField 
                   type="number" 
                   size="small" 
@@ -406,13 +406,13 @@ export default function TextControls({
                   key={layer.id} 
                   onClick={() => loadLayerForEdit(layer)}
                   sx={{ 
-                    backgroundColor: editingLayerId === layer.id ? 'primary.light' : 'grey.100', 
+                    bgcolor: editingLayerId === layer.id ? 'primary.light' : 'grey.100', 
                     borderRadius: 0.5, 
                     mb: 0.25, 
                     py: 0.25, 
                     px: 1,
                     cursor: 'pointer',
-                    '&:hover': { backgroundColor: editingLayerId === layer.id ? 'primary.light' : 'grey.200' }
+                    '&:hover': { bgcolor: editingLayerId === layer.id ? 'primary.light' : 'grey.200' }
                   }}
                 >
                   <ListItemText
