@@ -1,19 +1,56 @@
 import { TextLayer, PlatformConfig } from '@/types';
 
-// Constants for text rendering
-const LINE_HEIGHT_MULTIPLIER = 1.2;
+const _LINE_HEIGHT_MULTIPLIER = 1.2;
+
+export const calculateExportDimensions = (
+  image: HTMLImageElement,
+  platforms: PlatformConfig[]
+): Array<{ platformId: string; width: number; height: number }> =>
+  platforms.map(platform => {
+    const aspectRatio = platform.width / platform.height;
+    
+    const widthBasedHeight = Math.round(image.width / aspectRatio);
+    const heightBasedWidth = Math.round(image.height * aspectRatio);
+    
+    let exportWidth, exportHeight;
+    
+    const widthBasedArea = image.width * widthBasedHeight;
+    const heightBasedArea = heightBasedWidth * image.height;
+    
+    if (widthBasedHeight <= image.height && heightBasedWidth <= image.width) {
+      if (widthBasedArea >= heightBasedArea) {
+        exportWidth = image.width;
+        exportHeight = widthBasedHeight;
+      } else {
+        exportWidth = heightBasedWidth;
+        exportHeight = image.height;
+      }
+    } else if (widthBasedHeight <= image.height) {
+      exportWidth = image.width;
+      exportHeight = widthBasedHeight;
+    } else {
+      exportWidth = heightBasedWidth;
+      exportHeight = image.height;
+    }
+    
+    return {
+      platformId: platform.id,
+      width: exportWidth,
+      height: exportHeight,
+    };
+  });
 
 /**
  * Draw a rounded rectangle on a canvas context
  */
-export function drawRoundedRect(
+export const drawRoundedRect = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   width: number,
   height: number,
   radius: number
-): void {
+): void => {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
@@ -31,13 +68,13 @@ export function drawRoundedRect(
 /**
  * Calculate text Y position based on vertical alignment
  */
-function calculateTextY(
+const calculateTextY = (
   layer: TextLayer,
   canvasHeight: number,
   textBlockHeight: number,
   padding: number,
   scale: number
-): number {
+): number => {
   const distance = layer.distanceFromEdge * scale;
   const totalHeight = textBlockHeight + padding * 2;
   
@@ -55,17 +92,17 @@ function calculateTextY(
 /**
  * Draw a text layer with background and shadow on a canvas (supports multiline)
  */
-export function drawTextLayer(
+export const drawTextLayer = (
   ctx: CanvasRenderingContext2D,
   layer: TextLayer,
   canvasWidth: number,
   canvasHeight: number,
   scale: number = 1
-): void {
+): void => {
   const fontSize = layer.fontSize * scale;
   const padding = layer.padding * scale;
   const borderRadius = layer.borderRadius * scale;
-  const lineHeight = fontSize * LINE_HEIGHT_MULTIPLIER;
+  const lineHeight = fontSize * layer.lineHeight;
   
   let fontStyle = '';
   if (layer.isItalic) fontStyle += 'italic ';
@@ -79,32 +116,32 @@ export function drawTextLayer(
   const lines = layer.text.split('\n');
   const lineCount = lines.length;
   
-  // Calculate total text block dimensions
-  let maxLineWidth = 0;
-  lines.forEach(line => {
-    const metrics = ctx.measureText(line);
-    if (metrics.width > maxLineWidth) maxLineWidth = metrics.width;
-  });
+  // Calculate line widths
+  const lineWidths = lines.map(line => ctx.measureText(line).width);
   
   const textBlockHeight = lineCount * lineHeight;
   
   const x = canvasWidth / 2;
   const centerY = calculateTextY(layer, canvasHeight, textBlockHeight, padding, scale);
 
-  // Calculate background bounds
-  const bgX = x - maxLineWidth / 2 - padding;
-  const bgY = centerY - textBlockHeight / 2 - padding;
-  const bgWidth = maxLineWidth + padding * 2;
-  const bgHeight = textBlockHeight + padding * 2;
-
   // Save context state
   ctx.save();
 
-  // Draw background with rounded corners (no shadow on background)
-  if (layer.showBackground && layer.backgroundColor && layer.backgroundColor !== 'transparent') {
-    ctx.fillStyle = layer.backgroundColor;
-    drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
-  }
+  // Draw each line with its own background (inline mode)
+  lines.forEach((line, index) => {
+    const lineY = centerY - (textBlockHeight / 2) + (index * lineHeight) + (lineHeight / 2);
+    const lineWidth = lineWidths[index];
+    
+    // Draw background for this line only
+    if (layer.showBackground && layer.backgroundColor && layer.backgroundColor !== 'transparent') {
+      ctx.fillStyle = layer.backgroundColor;
+      const bgX = x - lineWidth / 2 - padding;
+      const bgY = lineY - lineHeight / 2;
+      const bgWidth = lineWidth + padding * 2;
+      const bgHeight = lineHeight;
+      drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
+    }
+  });
 
   // Apply shadow to text only
   if (layer.shadow?.enabled) {
@@ -128,7 +165,7 @@ export function drawTextLayer(
 /**
  * Get average color from an image
  */
-export function getAverageColor(image: HTMLImageElement): string {
+export const getAverageColor = (image: HTMLImageElement): string => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) return '#808080';
@@ -161,13 +198,13 @@ export function getAverageColor(image: HTMLImageElement): string {
 /**
  * Check if image covers the platform canvas
  */
-export function doesImageCoverCanvas(
+export const doesImageCoverCanvas = (
   image: HTMLImageElement,
   platform: PlatformConfig,
   imageX: number,
   imageY: number,
   zoom: number
-): boolean {
+): boolean => {
   const scale = zoom / 100;
   const imgWidth = image.width * scale;
   const imgHeight = image.height * scale;

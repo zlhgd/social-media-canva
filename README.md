@@ -8,7 +8,6 @@
 - **React 19** - Bibliothèque UI
 - **Material-UI (MUI)** - Composants UI
 - **TypeScript** - Typage statique
-- **Tailwind CSS** - Styles utilitaires
 
 ## Fonctionnalités
 

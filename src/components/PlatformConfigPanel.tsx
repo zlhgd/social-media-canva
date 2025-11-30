@@ -1,53 +1,97 @@
 'use client';
 
-import React from 'react';
-import { Box, Typography, TextField, Stack } from '@mui/material';
+import { Stack, Divider } from '@mui/material';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { PlatformConfig } from '@/types';
+import PlatformConfigItem from './PlatformConfigItem';
+import PlatformForm from './PlatformForm';
 
 interface PlatformConfigPanelProps {
   platforms: PlatformConfig[];
-  onPlatformChange: (platforms: PlatformConfig[]) => void;
+  onPlatformChange: (_platforms: PlatformConfig[]) => void;
 }
 
-export default function PlatformConfigPanel({ platforms, onPlatformChange }: PlatformConfigPanelProps) {
-  const handleDimensionChange = (platformId: string, field: 'width' | 'height', value: string) => {
-    const numValue = parseInt(value) || 0;
-    if (numValue < 100 || numValue > 4000) return;
-    
-    const updatedPlatforms = platforms.map(p => 
-      p.id === platformId ? { ...p, [field]: numValue } : p
-    );
+const PlatformConfigPanel = ({ platforms, onPlatformChange }: PlatformConfigPanelProps) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = platforms.findIndex((p) => p.id === active.id);
+      const newIndex = platforms.findIndex((p) => p.id === over.id);
+      onPlatformChange(arrayMove(platforms, oldIndex, newIndex));
+    }
+  };
+
+  const handleUpdate = (platformId: string, updates: Partial<PlatformConfig>) => {
+    const updatedPlatforms = platforms.map((p) => (p.id === platformId ? { ...p, ...updates } : p));
     onPlatformChange(updatedPlatforms);
   };
 
+  const handleDelete = (platformId: string) => {
+    const updatedPlatforms = platforms.filter((p) => p.id !== platformId);
+    onPlatformChange(updatedPlatforms);
+  };
+
+  const handleAddPlatform = (name: string, width: number, height: number) => {
+    const newPlatform: PlatformConfig = {
+      id: `custom-${Date.now()}`,
+      name,
+      width,
+      height,
+      color:
+        '#' +
+        Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, '0'),
+      visible: true,
+    };
+
+    onPlatformChange([...platforms, newPlatform]);
+  };
+
   return (
-    <Stack spacing={0.75}>
-      {platforms.map((platform) => (
-        <Box key={platform.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <Typography sx={{ minWidth: 80, color: platform.color, fontWeight: 500, fontSize: '0.8rem' }}>
-            {platform.name}
-          </Typography>
-          <TextField
-            type="number"
-            size="small"
-            label="Largeur"
-            value={platform.width}
-            onChange={(e) => handleDimensionChange(platform.id, 'width', e.target.value)}
-            inputProps={{ min: 100, max: 4000, step: 10 }}
-            sx={{ width: 90, '& .MuiOutlinedInput-root': { borderRadius: 0.5 }, '& .MuiInputLabel-root': { fontSize: '0.7rem' } }}
-          />
-          <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>×</Typography>
-          <TextField
-            type="number"
-            size="small"
-            label="Hauteur"
-            value={platform.height}
-            onChange={(e) => handleDimensionChange(platform.id, 'height', e.target.value)}
-            inputProps={{ min: 100, max: 4000, step: 10 }}
-            sx={{ width: 90, '& .MuiOutlinedInput-root': { borderRadius: 0.5 }, '& .MuiInputLabel-root': { fontSize: '0.7rem' } }}
-          />
-        </Box>
-      ))}
+    <Stack spacing={2}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={platforms.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+          <Stack spacing={1}>
+            {platforms.map((platform) => (
+              <PlatformConfigItem
+                key={platform.id}
+                platform={platform}
+                onUpdate={handleUpdate}
+                onDelete={handleDelete}
+              />
+            ))}
+          </Stack>
+        </SortableContext>
+      </DndContext>
+
+      <Divider />
+
+      <PlatformForm onAdd={handleAddPlatform} />
     </Stack>
   );
-}
+};
+
+export default PlatformConfigPanel;

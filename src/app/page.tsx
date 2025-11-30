@@ -4,16 +4,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import {
   Container,
   Box,
-  Button,
   Stack,
-  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageUploader from '@/components/ImageUploader';
 import PlatformConfigPanel from '@/components/PlatformConfigPanel';
@@ -23,54 +19,72 @@ import PreviewsPanel from '@/components/PreviewsPanel';
 import { PlatformConfig, TextLayer, TextStyle, DEFAULT_PLATFORMS, STORAGE_KEY } from '@/types';
 import { getAverageColor } from '@/lib/canvas-utils';
 
-export default function Home() {
+const loadFromLocalStorage = () => {
+  if (typeof window === 'undefined') return { platforms: DEFAULT_PLATFORMS, textStyles: [] };
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const textStyles = (parsed.textStyles || []).map((style: TextStyle) => ({
+        ...style,
+        lineHeight: style.lineHeight ?? 1.2,
+      }));
+      const platforms = (parsed.platforms || DEFAULT_PLATFORMS).map((p: PlatformConfig) => ({
+        ...p,
+        visible: p.visible ?? true,
+      }));
+      return {
+        platforms,
+        textStyles,
+      };
+    }
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+  }
+  return { platforms: DEFAULT_PLATFORMS, textStyles: [] };
+};
+
+const Home = () => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [platforms, setPlatforms] = useState<PlatformConfig[]>(DEFAULT_PLATFORMS);
+  const [platforms, setPlatforms] = useState<PlatformConfig[]>(
+    () => loadFromLocalStorage().platforms
+  );
   const [imageX, setImageX] = useState(0);
   const [imageY, setImageY] = useState(0);
   const [zoom, setZoom] = useState(100);
   const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
-  const [textStyles, setTextStyles] = useState<TextStyle[]>([]);
+  const [textStyles, setTextStyles] = useState<TextStyle[]>(
+    () => loadFromLocalStorage().textStyles
+  );
   const [textIdCounter, setTextIdCounter] = useState(0);
   const [averageColor, setAverageColor] = useState('#808080');
   const [platformDialogOpen, setPlatformDialogOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const [previewText, setPreviewText] = useState<Omit<TextLayer, 'id'> | null>(null);
 
-  // Mark as client-side and load from localStorage
   useEffect(() => {
-    setIsClient(true);
+    if (typeof window === 'undefined') return;
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.platforms) setPlatforms(parsed.platforms);
-        if (parsed.textStyles) setTextStyles(parsed.textStyles);
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-    }
-  }, []);
-
-  // Save only config (platforms and text styles) to localStorage
-  useEffect(() => {
-    if (!isClient) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        platforms,
-        textStyles,
-      }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          platforms,
+          textStyles,
+        })
+      );
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
-  }, [platforms, textStyles, isClient]);
+  }, [platforms, textStyles]);
 
   const handleImageLoad = useCallback((img: HTMLImageElement) => {
     setImage(img);
     setAverageColor(getAverageColor(img));
     setImageX(0);
     setImageY(0);
-    setZoom(100);
+
+    const maxDimension = Math.max(img.width, img.height);
+    const coverZoom = (maxDimension / img.width) * 100;
+    setZoom(coverZoom);
   }, []);
 
   const handlePositionChange = useCallback((x: number, y: number) => {
@@ -91,19 +105,22 @@ export default function Home() {
     setTextIdCounter(0);
   }, []);
 
-  const handleAddTextLayer = useCallback((layer: Omit<TextLayer, 'id'>) => {
-    setTextIdCounter(prev => prev + 1);
-    setTextLayers(prev => [...prev, { ...layer, id: textIdCounter + 1 }]);
-  }, [textIdCounter]);
+  const handleAddTextLayer = useCallback(
+    (layer: Omit<TextLayer, 'id'>) => {
+      setTextIdCounter((prev) => prev + 1);
+      setTextLayers((prev) => [...prev, { ...layer, id: textIdCounter + 1 }]);
+    },
+    [textIdCounter]
+  );
 
   const handleUpdateTextLayer = useCallback((id: number, updates: Partial<TextLayer>) => {
-    setTextLayers(prev => prev.map(layer =>
-      layer.id === id ? { ...layer, ...updates } : layer
-    ));
+    setTextLayers((prev) =>
+      prev.map((layer) => (layer.id === id ? { ...layer, ...updates } : layer))
+    );
   }, []);
 
   const handleDeleteTextLayer = useCallback((id: number) => {
-    setTextLayers(prev => prev.filter(layer => layer.id !== id));
+    setTextLayers((prev) => prev.filter((layer) => layer.id !== id));
   }, []);
 
   const handleSaveTextStyle = useCallback((style: Omit<TextStyle, 'id'>) => {
@@ -111,11 +128,11 @@ export default function Home() {
       ...style,
       id: Date.now().toString(),
     };
-    setTextStyles(prev => [...prev, newStyle]);
+    setTextStyles((prev) => [...prev, newStyle]);
   }, []);
 
   const handleDeleteTextStyle = useCallback((id: string) => {
-    setTextStyles(prev => prev.filter(style => style.id !== id));
+    setTextStyles((prev) => prev.filter((style) => style.id !== id));
   }, []);
 
   const handlePreviewChange = useCallback((preview: Omit<TextLayer, 'id'> | null) => {
@@ -123,95 +140,74 @@ export default function Home() {
   }, []);
 
   return (
-    <Box sx={{ height: '100vh', backgroundColor: '#fafafa', p: 1, display: 'flex', flexDirection: 'column' }}>
-      <Container maxWidth="xl" disableGutters sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {!image ? (
-          <ImageUploader onImageLoad={handleImageLoad} />
-        ) : (
-          <Grid container spacing={1} sx={{ flexGrow: 1, overflow: 'hidden' }}>
-            {/* Left Column - Editor (scrollable within itself) */}
-            <Grid size={{ xs: 12, lg: 5 }} sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <Stack spacing={1} sx={{ height: '100%', overflow: 'auto' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<SettingsIcon />}
-                    onClick={() => setPlatformDialogOpen(true)}
-                  >
-                    Plateformes
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleNewImage}
-                  >
-                    Nouvelle image
-                  </Button>
-                </Box>
-
-                <CanvasEditor
-                  image={image}
-                  platforms={platforms}
-                  imageX={imageX}
-                  imageY={imageY}
-                  zoom={zoom}
-                  averageColor={averageColor}
-                  onPositionChange={handlePositionChange}
-                  onZoomChange={handleZoomChange}
-                />
-
-                <TextControls
-                  textLayers={textLayers}
-                  textStyles={textStyles}
-                  onAddLayer={handleAddTextLayer}
-                  onUpdateLayer={handleUpdateTextLayer}
-                  onDeleteLayer={handleDeleteTextLayer}
-                  onSaveStyle={handleSaveTextStyle}
-                  onDeleteStyle={handleDeleteTextStyle}
-                  onPreviewChange={handlePreviewChange}
-                />
-              </Stack>
-            </Grid>
-
-            {/* Right Column - Previews (scrollable) */}
-            <Grid size={{ xs: 12, lg: 7 }} sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <PreviewsPanel
+    <Container maxWidth="xl" sx={{ p: 1 }}>
+      {!image ? (
+        <ImageUploader onImageLoad={handleImageLoad} />
+      ) : (
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: '1 1 500px', minWidth: { xs: '100%', md: '500px' } }}>
+            <Stack spacing={1}>
+              <CanvasEditor
                 image={image}
                 platforms={platforms}
-                textLayers={textLayers}
                 imageX={imageX}
                 imageY={imageY}
                 zoom={zoom}
                 averageColor={averageColor}
-                previewText={previewText}
+                onPositionChange={handlePositionChange}
+                onZoomChange={handleZoomChange}
+                onReplaceImage={handleNewImage}
               />
-            </Grid>
-          </Grid>
-        )}
 
-        {/* Platform Configuration Dialog */}
-        <Dialog
-          open={platformDialogOpen}
-          onClose={() => setPlatformDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            Configuration des plateformes
-            <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <PlatformConfigPanel
+              <TextControls
+                textLayers={textLayers}
+                textStyles={textStyles}
+                onAddLayer={handleAddTextLayer}
+                onUpdateLayer={handleUpdateTextLayer}
+                onDeleteLayer={handleDeleteTextLayer}
+                onSaveStyle={handleSaveTextStyle}
+                onDeleteStyle={handleDeleteTextStyle}
+                onPreviewChange={handlePreviewChange}
+              />
+            </Stack>
+          </Box>
+
+          <Box sx={{ width: { xs: '100%', md: '500px' }, flexShrink: 0 }}>
+            <PreviewsPanel
+              image={image}
               platforms={platforms}
-              onPlatformChange={setPlatforms}
+              textLayers={textLayers}
+              imageX={imageX}
+              imageY={imageY}
+              zoom={zoom}
+              averageColor={averageColor}
+              previewText={previewText}
+              onOpenSettings={() => setPlatformDialogOpen(true)}
             />
-          </DialogContent>
-        </Dialog>
-      </Container>
-    </Box>
+          </Box>
+        </Box>
+      )}
+
+      <Dialog
+        open={platformDialogOpen}
+        onClose={() => setPlatformDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          Configuration des formats
+          <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <PlatformConfigPanel platforms={platforms} onPlatformChange={setPlatforms} />
+        </DialogContent>
+      </Dialog>
+    </Container>
   );
-}
+};
+
+export default Home;

@@ -7,18 +7,18 @@ export const metadata: Metadata = {
   description: "Créez des visuels optimisés pour Instagram, Facebook et LinkedIn",
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
-  return (
-    <html lang="fr">
-      <body className="antialiased" style={{ fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-        <ThemeRegistry>
-          {children}
-        </ThemeRegistry>
-      </body>
-    </html>
-  );
-}
+}>) => (
+  <html lang="fr">
+    <body className="antialiased" style={{ fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      <ThemeRegistry>
+        {children}
+      </ThemeRegistry>
+    </body>
+  </html>
+);
+
+export default RootLayout;
