@@ -4,6 +4,7 @@ export interface PlatformConfig {
   width: number;
   height: number;
   color: string;
+  visible: boolean;
 }
 
 export type VerticalAlignment = 'top' | 'middle' | 'bottom';
@@ -63,9 +64,9 @@ export const DEFAULT_SHADOW: TextShadow = {
 // Instagram feed: 1080px width, 628-1350px height
 // LinkedIn post: 1200×627 recommended for optimal display
 export const DEFAULT_PLATFORMS: PlatformConfig[] = [
-  { id: 'facebook', name: 'Facebook', width: 1080, height: 1080, color: '#1877f2' },
-  { id: 'instagram', name: 'Instagram', width: 1080, height: 1350, color: '#e1306c' },
-  { id: 'linkedin', name: 'LinkedIn', width: 1200, height: 627, color: '#0a66c2' },
+  { id: 'facebook', name: 'Facebook', width: 1080, height: 1080, color: '#1877f2', visible: true },
+  { id: 'instagram', name: 'Instagram', width: 1080, height: 1350, color: '#e1306c', visible: true },
+  { id: 'linkedin', name: 'LinkedIn', width: 1200, height: 627, color: '#0a66c2', visible: true },
 ];
 
 export const FONT_OPTIONS = [

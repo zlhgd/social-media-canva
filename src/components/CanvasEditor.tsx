@@ -5,6 +5,7 @@ import { Box, Card, CardContent, Stack, Button, ButtonGroup, Tooltip } from '@mu
 import CropFreeIcon from '@mui/icons-material/CropFree';
 import AlignHorizontalCenterIcon from '@mui/icons-material/AlignHorizontalCenter';
 import AlignVerticalCenterIcon from '@mui/icons-material/AlignVerticalCenter';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { PlatformConfig } from '@/types';
 import { calculateExportDimensions } from '@/lib/canvas-utils';
 
@@ -17,6 +18,7 @@ interface CanvasEditorProps {
   averageColor: string;
   onPositionChange: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
+  onReplaceImage?: () => void;
 }
 
 type ResizeHandle = 'nw' | 'ne' | 'sw' | 'se' | null;
@@ -55,6 +57,7 @@ export default function CanvasEditor({
   averageColor,
   onPositionChange,
   onZoomChange,
+  onReplaceImage,
 }: CanvasEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -472,6 +475,11 @@ export default function CanvasEditor({
                 </Button>
               </Tooltip>
             </ButtonGroup>
+            {onReplaceImage && (
+              <Button size="small" startIcon={<RefreshIcon />} onClick={onReplaceImage}>
+                Remplacer
+              </Button>
+            )}
           </Stack>
 
           <Box

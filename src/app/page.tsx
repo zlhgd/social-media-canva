@@ -32,8 +32,12 @@ function loadFromLocalStorage() {
         ...style,
         lineHeight: style.lineHeight ?? 1.2,
       }));
+      const platforms = (parsed.platforms || DEFAULT_PLATFORMS).map((p: PlatformConfig) => ({
+        ...p,
+        visible: p.visible ?? true,
+      }));
       return {
-        platforms: parsed.platforms || DEFAULT_PLATFORMS,
+        platforms,
         textStyles,
       };
     }
@@ -144,23 +148,6 @@ export default function Home() {
               minWidth: { xs: '100%', md: '500px' },
             }}>
               <Stack spacing={1}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Button
-                    size="small"
-                    startIcon={<SettingsIcon />}
-                    onClick={() => setPlatformDialogOpen(true)}
-                  >
-                    Plateformes
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleNewImage}
-                  >
-                    Nouvelle image
-                  </Button>
-                </Box>
-
                 <CanvasEditor
                   image={image}
                   platforms={platforms}
@@ -170,6 +157,7 @@ export default function Home() {
                   averageColor={averageColor}
                   onPositionChange={handlePositionChange}
                   onZoomChange={handleZoomChange}
+                  onReplaceImage={handleNewImage}
                 />
 
                 <TextControls
@@ -198,6 +186,7 @@ export default function Home() {
                 zoom={zoom}
                 averageColor={averageColor}
                 previewText={previewText}
+                onOpenSettings={() => setPlatformDialogOpen(true)}
               />
             </Box>
           </Box>

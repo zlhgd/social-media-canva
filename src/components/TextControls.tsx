@@ -23,6 +23,7 @@ import {
   DialogActions,
   Switch,
   FormControlLabel,
+  Popover,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,6 +31,7 @@ import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckIcon from '@mui/icons-material/Check';
+import { Sketch } from '@uiw/react-color';
 import { TextLayer, TextStyle, FONT_OPTIONS, VerticalAlignment } from '@/types';
 
 const DISTANCE_STEP = 10;
@@ -197,6 +199,9 @@ function TextLayerBlock({
   const [showBackground, setShowBackground] = useState(layer.showBackground);
   const [padding, setPadding] = useState(layer.padding);
   const [borderRadius, setBorderRadius] = useState(layer.borderRadius);
+  const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
+  const [bgColorAnchor, setBgColorAnchor] = useState<HTMLElement | null>(null);
+  const [shadowColorAnchor, setShadowColorAnchor] = useState<HTMLElement | null>(null);
   const [styles, setStyles] = useState<string[]>([
     ...(layer.isBold ? ['bold'] : []),
     ...(layer.isItalic ? ['italic'] : []),
@@ -385,9 +390,28 @@ function TextLayerBlock({
                   sx={{ width: 75 }} 
                 />
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography variant="caption">Texte</Typography>
-                  <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
+                <Box>
+                  <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>Texte</Typography>
+                  <Box
+                    onClick={(e) => setColorAnchor(e.currentTarget)}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: color,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <Popover
+                    open={Boolean(colorAnchor)}
+                    anchorEl={colorAnchor}
+                    onClose={() => setColorAnchor(null)}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  >
+                    <Sketch color={color} onChange={(color) => setColor(color.hex)} />
+                  </Popover>
                 </Box>
 
                 <ToggleButtonGroup value={styles} onChange={handleStyleChange} size="small">
@@ -404,7 +428,29 @@ function TextLayerBlock({
                 />
                 {showBackground && (
                   <>
-                    <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>Fond</Typography>
+                      <Box
+                        onClick={(e) => setBgColorAnchor(e.currentTarget)}
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          bgcolor: backgroundColor,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <Popover
+                        open={Boolean(bgColorAnchor)}
+                        anchorEl={bgColorAnchor}
+                        onClose={() => setBgColorAnchor(null)}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                      >
+                        <Sketch color={backgroundColor} onChange={(color) => setBackgroundColor(color.hex)} />
+                      </Popover>
+                    </Box>
                     <TextField 
                       type="number" 
                       size="small" 
@@ -457,7 +503,29 @@ function TextLayerBlock({
                 />
                 {shadowEnabled && (
                   <>
-                    <input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} />
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>Couleur</Typography>
+                      <Box
+                        onClick={(e) => setShadowColorAnchor(e.currentTarget)}
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          bgcolor: shadowColor,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <Popover
+                        open={Boolean(shadowColorAnchor)}
+                        anchorEl={shadowColorAnchor}
+                        onClose={() => setShadowColorAnchor(null)}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                      >
+                        <Sketch color={shadowColor} onChange={(color) => setShadowColor(color.hex)} />
+                      </Popover>
+                    </Box>
                     <TextField 
                       type="number" 
                       size="small" 

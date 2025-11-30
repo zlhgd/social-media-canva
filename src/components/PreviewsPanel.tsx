@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
-import { Box, Card, CardContent, Typography, Button, Stack } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, Stack, IconButton } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { PlatformConfig, TextLayer } from '@/types';
 import { drawTextLayer, doesImageCoverCanvas, calculateExportDimensions } from '@/lib/canvas-utils';
 
@@ -17,6 +18,7 @@ interface PreviewsPanelProps {
   zoom: number;
   averageColor: string;
   previewText?: Omit<TextLayer, 'id'> | null;
+  onOpenSettings: () => void;
 }
 
 function PlatformPreview({
@@ -170,6 +172,7 @@ export default function PreviewsPanel({
   zoom,
   averageColor,
   previewText,
+  onOpenSettings,
 }: PreviewsPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(468);
@@ -222,8 +225,13 @@ export default function PreviewsPanel({
     return canvas;
   };
 
+  const visiblePlatforms = useMemo(() => 
+    platforms.filter(p => p.visible), 
+    [platforms]
+  );
+
   const handleDownloadAll = async () => {
-    for (const platform of platforms) {
+    for (const platform of visiblePlatforms) {
       try {
         const canvas = generateCanvasForPlatform(platform);
         const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
@@ -244,7 +252,12 @@ export default function PreviewsPanel({
     <Card variant="outlined" sx={{ borderRadius: 1 }} ref={containerRef}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant="body2">Aperçus</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography variant="body2">Aperçus</Typography>
+            <IconButton size="small" onClick={onOpenSettings}>
+              <SettingsIcon fontSize="small" />
+            </IconButton>
+          </Box>
           <Button 
             variant="contained" 
             size="small" 
@@ -256,7 +269,7 @@ export default function PreviewsPanel({
         </Stack>
 
         <Stack spacing={1}>
-          {platforms.map((platform) => {
+          {visiblePlatforms.map((platform) => {
             const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
             if (!dimensions) return null;
             
