@@ -71,7 +71,7 @@ const FontControls = ({
         label="Taille"
         value={fontSize}
         onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 48)}
-        inputProps={{ min: 12, max: 200, step: 1 }}
+        slotProps={{ htmlInput: { min: 12, max: 200, step: 1 } }}
         sx={{ width: 70 }}
       />
 
@@ -81,7 +81,7 @@ const FontControls = ({
         label="Hauteur"
         value={lineHeight}
         onChange={(e) => onLineHeightChange(parseFloat(e.target.value) || 1.2)}
-        inputProps={{ min: 0.5, max: 3, step: 0.1 }}
+        slotProps={{ htmlInput: { min: 0.5, max: 3, step: 0.1 } }}
         sx={{ width: 75 }}
       />
 

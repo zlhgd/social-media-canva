@@ -1,7 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, Card, CardContent, TextField, Button, IconButton, Stack } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  IconButton,
+  Stack,
+  Tooltip,
+  CardActions,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import { TextLayer, TextStyle } from '@/types';
@@ -143,99 +153,84 @@ const TextLayerBlock = ({
   };
 
   return (
-    <Card variant="outlined" sx={{ border: '1px solid', borderColor: 'divider' }}>
-      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5, gap: 0.5 }}>
-          <Button
-            size="small"
-            startIcon={<SaveIcon />}
-            onClick={handleSaveStyle}
-            sx={{ minWidth: 'auto', px: 1 }}
-          >
-            Sauver
-          </Button>
-          <IconButton
-            size="small"
-            onClick={() => onDeleteLayer(layer.id)}
-            color="error"
-            sx={{ p: 0.5 }}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
+    <Card>
+      <CardContent sx={{ display: 'flex', gap: 2, pb: 0 }}>
+        <TextField
+          fullWidth
+          multiline
+          minRows={8}
+          maxRows={12}
+          placeholder="Saisissez votre texte..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          sx={{ flex: 1 }}
+        />
+        <Stack spacing={2} sx={{ flex: 1 }}>
+          <PositionControls
+            verticalAlign={verticalAlign}
+            distanceFromEdge={distanceFromEdge}
+            onVerticalAlignChange={setVerticalAlign}
+            onDistanceFromEdgeChange={setDistanceFromEdge}
+          />
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Box sx={{ flex: 1 }}>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              maxRows={8}
-              size="small"
-              placeholder="Saisissez votre texte..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Stack spacing={2}>
-              <PositionControls
-                verticalAlign={verticalAlign}
-                distanceFromEdge={distanceFromEdge}
-                onVerticalAlignChange={setVerticalAlign}
-                onDistanceFromEdgeChange={setDistanceFromEdge}
-              />
+          <StyleSelector
+            textStyles={textStyles}
+            selectedStyleId={selectedStyleId}
+            onApplyStyle={handleApplyStyle}
+          />
 
-              <StyleSelector
-                textStyles={textStyles}
-                selectedStyleId={selectedStyleId}
-                onApplyStyle={handleApplyStyle}
-              />
+          <FontControls
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+            lineHeight={lineHeight}
+            color={color}
+            isBold={isBold}
+            isItalic={isItalic}
+            onFontFamilyChange={setFontFamily}
+            onFontSizeChange={setFontSize}
+            onLineHeightChange={setLineHeight}
+            onColorChange={setColor}
+            onStyleChange={(bold, italic) => {
+              setIsBold(bold);
+              setIsItalic(italic);
+            }}
+          />
 
-              <FontControls
-                fontFamily={fontFamily}
-                fontSize={fontSize}
-                lineHeight={lineHeight}
-                color={color}
-                isBold={isBold}
-                isItalic={isItalic}
-                onFontFamilyChange={setFontFamily}
-                onFontSizeChange={setFontSize}
-                onLineHeightChange={setLineHeight}
-                onColorChange={setColor}
-                onStyleChange={(bold, italic) => {
-                  setIsBold(bold);
-                  setIsItalic(italic);
-                }}
-              />
+          <BackgroundControls
+            showBackground={showBackground}
+            backgroundColor={backgroundColor}
+            padding={padding}
+            borderRadius={borderRadius}
+            onShowBackgroundChange={setShowBackground}
+            onBackgroundColorChange={setBackgroundColor}
+            onPaddingChange={setPadding}
+            onBorderRadiusChange={setBorderRadius}
+          />
 
-              <BackgroundControls
-                showBackground={showBackground}
-                backgroundColor={backgroundColor}
-                padding={padding}
-                borderRadius={borderRadius}
-                onShowBackgroundChange={setShowBackground}
-                onBackgroundColorChange={setBackgroundColor}
-                onPaddingChange={setPadding}
-                onBorderRadiusChange={setBorderRadius}
-              />
-
-              <ShadowControls
-                enabled={shadowEnabled}
-                color={shadowColor}
-                blur={shadowBlur}
-                offsetX={shadowOffsetX}
-                offsetY={shadowOffsetY}
-                onEnabledChange={setShadowEnabled}
-                onColorChange={setShadowColor}
-                onBlurChange={setShadowBlur}
-                onOffsetXChange={setShadowOffsetX}
-                onOffsetYChange={setShadowOffsetY}
-              />
-            </Stack>
-          </Box>
-        </Box>
+          <ShadowControls
+            enabled={shadowEnabled}
+            color={shadowColor}
+            blur={shadowBlur}
+            offsetX={shadowOffsetX}
+            offsetY={shadowOffsetY}
+            onEnabledChange={setShadowEnabled}
+            onColorChange={setShadowColor}
+            onBlurChange={setShadowBlur}
+            onOffsetXChange={setShadowOffsetX}
+            onOffsetYChange={setShadowOffsetY}
+          />
+        </Stack>
       </CardContent>
+      <CardActions sx={{ justifyContent: 'flex-end' }}>
+        <Button startIcon={<SaveIcon />} onClick={handleSaveStyle}>
+          Enregistrer le style
+        </Button>
+        <Tooltip title="Supprimer ce calque de texte">
+          <IconButton onClick={() => onDeleteLayer(layer.id)} color="error">
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </CardActions>
     </Card>
   );
 };

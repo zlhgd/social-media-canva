@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, TextField, IconButton, Popover } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Popover, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -18,7 +18,9 @@ interface PlatformConfigItemProps {
 }
 
 const PlatformConfigItem = ({ platform, onUpdate, onDelete }: PlatformConfigItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: platform.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: platform.id,
+  });
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
 
   const style = {
@@ -28,16 +30,28 @@ const PlatformConfigItem = ({ platform, onUpdate, onDelete }: PlatformConfigItem
   };
 
   return (
-    <Box ref={setNodeRef} style={style} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-      <IconButton size="small" {...attributes} {...listeners} sx={{ cursor: 'grab' }}>
-        <DragIndicatorIcon fontSize="small" />
-      </IconButton>
-      <IconButton
-        size="small"
-        onClick={() => onUpdate(platform.id, { visible: !platform.visible })}
-      >
-        {platform.visible ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
-      </IconButton>
+    <Box
+      ref={setNodeRef}
+      style={style}
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 1 }}
+    >
+      <Tooltip title="Réorganiser">
+        <IconButton size="small" {...attributes} {...listeners} sx={{ cursor: 'grab' }}>
+          <DragIndicatorIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title={platform.visible ? 'Masquer' : 'Afficher'}>
+        <IconButton
+          size="small"
+          onClick={() => onUpdate(platform.id, { visible: !platform.visible })}
+        >
+          {platform.visible ? (
+            <VisibilityIcon fontSize="small" />
+          ) : (
+            <VisibilityOffIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Tooltip>
       <TextField
         size="small"
         value={platform.name}
@@ -50,7 +64,7 @@ const PlatformConfigItem = ({ platform, onUpdate, onDelete }: PlatformConfigItem
         label="Largeur"
         value={platform.width}
         onChange={(e) => onUpdate(platform.id, { width: parseInt(e.target.value) || 0 })}
-        inputProps={{ min: 100, max: 4000, step: 10 }}
+        slotProps={{ htmlInput: { min: 100, max: 4000, step: 10 } }}
         sx={{ width: 90 }}
       />
       <Typography variant="body2">×</Typography>
@@ -60,7 +74,7 @@ const PlatformConfigItem = ({ platform, onUpdate, onDelete }: PlatformConfigItem
         label="Hauteur"
         value={platform.height}
         onChange={(e) => onUpdate(platform.id, { height: parseInt(e.target.value) || 0 })}
-        inputProps={{ min: 100, max: 4000, step: 10 }}
+        slotProps={{ htmlInput: { min: 100, max: 4000, step: 10 } }}
         sx={{ width: 90 }}
       />
       <Box
@@ -86,13 +100,11 @@ const PlatformConfigItem = ({ platform, onUpdate, onDelete }: PlatformConfigItem
           onChange={(color) => onUpdate(platform.id, { color: color.hex })}
         />
       </Popover>
-      <IconButton
-        size="small"
-        onClick={() => onDelete(platform.id)}
-        color="error"
-      >
-        <DeleteIcon fontSize="small" />
-      </IconButton>
+      <Tooltip title="Supprimer">
+        <IconButton size="small" onClick={() => onDelete(platform.id)} color="error">
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 };

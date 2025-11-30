@@ -49,7 +49,7 @@ const ShadowControls = ({
           label="Flou"
           value={blur}
           onChange={(e) => onBlurChange(parseInt(e.target.value) || 0)}
-          inputProps={{ min: 0, max: 50, step: 1 }}
+          slotProps={{ htmlInput: { min: 0, max: 50, step: 1 } }}
           sx={{ width: 55 }}
         />
         <TextField
@@ -58,8 +58,8 @@ const ShadowControls = ({
           label="X"
           value={offsetX}
           onChange={(e) => onOffsetXChange(parseInt(e.target.value) || 0)}
-          inputProps={{ min: -50, max: 50, step: 1 }}
-          sx={{ width: 50 }}
+          slotProps={{ htmlInput: { min: -50, max: 50, step: 1 } }}
+          sx={{ width: 70 }}
         />
         <TextField
           type="number"
@@ -67,8 +67,8 @@ const ShadowControls = ({
           label="Y"
           value={offsetY}
           onChange={(e) => onOffsetYChange(parseInt(e.target.value) || 0)}
-          inputProps={{ min: -50, max: 50, step: 1 }}
-          sx={{ width: 50 }}
+          slotProps={{ htmlInput: { min: -50, max: 50, step: 1 } }}
+          sx={{ width: 70 }}
         />
       </>
     )}

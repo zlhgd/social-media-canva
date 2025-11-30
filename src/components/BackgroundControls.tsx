@@ -45,7 +45,7 @@ const BackgroundControls = ({
           label="Marge"
           value={padding}
           onChange={(e) => onPaddingChange(parseInt(e.target.value) || 0)}
-          inputProps={{ min: 0, max: 50, step: 1 }}
+          slotProps={{ htmlInput: { min: 0, max: 50, step: 1 } }}
           sx={{ width: 65 }}
         />
         <TextField
@@ -54,7 +54,7 @@ const BackgroundControls = ({
           label="Arrondi"
           value={borderRadius}
           onChange={(e) => onBorderRadiusChange(parseInt(e.target.value) || 0)}
-          inputProps={{ min: 0, max: 50, step: 1 }}
+          slotProps={{ htmlInput: { min: 0, max: 50, step: 1 } }}
           sx={{ width: 65 }}
         />
       </>

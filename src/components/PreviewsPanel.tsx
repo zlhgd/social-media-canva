@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useRef, useEffect, useMemo } from 'react';
-import { Box, Card, CardContent, Typography, Button, Stack, IconButton } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { PlatformConfig, TextLayer } from '@/types';
@@ -34,8 +43,8 @@ const PreviewsPanel = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(468);
 
-  const platformExportDimensions = useMemo(() => 
-    calculateExportDimensions(image, platforms), 
+  const platformExportDimensions = useMemo(
+    () => calculateExportDimensions(image, platforms),
     [platforms, image]
   );
 
@@ -56,7 +65,7 @@ const PreviewsPanel = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
 
-    const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
+    const dimensions = platformExportDimensions.find((d) => d.platformId === platform.id);
     if (!dimensions) throw new Error('Export dimensions not found');
 
     canvas.width = dimensions.width;
@@ -70,35 +79,32 @@ const PreviewsPanel = ({
     const scale = zoom / 100;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgX = (canvas.width / 2) + imageX - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + imageY - (imgHeight / 2);
+    const imgX = canvas.width / 2 + imageX - imgWidth / 2;
+    const imgY = canvas.height / 2 + imageY - imgHeight / 2;
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    textLayers.forEach(layer => {
+    textLayers.forEach((layer) => {
       drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
 
     return canvas;
   };
 
-  const visiblePlatforms = useMemo(() => 
-    platforms.filter(p => p.visible), 
-    [platforms]
-  );
+  const visiblePlatforms = useMemo(() => platforms.filter((p) => p.visible), [platforms]);
 
   const handleDownloadAll = async () => {
     for (const platform of visiblePlatforms) {
       try {
         const canvas = generateCanvasForPlatform(platform);
-        const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
+        const dimensions = platformExportDimensions.find((d) => d.platformId === platform.id);
         if (!dimensions) continue;
-        
+
         const link = document.createElement('a');
         link.download = `${platform.id}-${dimensions.width}x${dimensions.height}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(`Failed to download ${platform.name}:`, error);
       }
@@ -111,14 +117,16 @@ const PreviewsPanel = ({
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography variant="body2">Aperçus</Typography>
-            <IconButton size="small" onClick={onOpenSettings}>
-              <SettingsIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title="Configurer les plateformes">
+              <IconButton size="small" onClick={onOpenSettings}>
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
-          <Button 
-            variant="contained" 
-            size="small" 
-            startIcon={<DownloadIcon />} 
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<DownloadIcon />}
             onClick={handleDownloadAll}
           >
             Tout télécharger
@@ -127,9 +135,9 @@ const PreviewsPanel = ({
 
         <Stack spacing={1}>
           {visiblePlatforms.map((platform) => {
-            const dimensions = platformExportDimensions.find(d => d.platformId === platform.id);
+            const dimensions = platformExportDimensions.find((d) => d.platformId === platform.id);
             if (!dimensions) return null;
-            
+
             return (
               <PlatformPreview
                 key={platform.id}

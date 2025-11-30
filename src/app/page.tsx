@@ -46,12 +46,16 @@ const loadFromLocalStorage = () => {
 
 const Home = () => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [platforms, setPlatforms] = useState<PlatformConfig[]>(() => loadFromLocalStorage().platforms);
+  const [platforms, setPlatforms] = useState<PlatformConfig[]>(
+    () => loadFromLocalStorage().platforms
+  );
   const [imageX, setImageX] = useState(0);
   const [imageY, setImageY] = useState(0);
   const [zoom, setZoom] = useState(100);
   const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
-  const [textStyles, setTextStyles] = useState<TextStyle[]>(() => loadFromLocalStorage().textStyles);
+  const [textStyles, setTextStyles] = useState<TextStyle[]>(
+    () => loadFromLocalStorage().textStyles
+  );
   const [textIdCounter, setTextIdCounter] = useState(0);
   const [averageColor, setAverageColor] = useState('#808080');
   const [platformDialogOpen, setPlatformDialogOpen] = useState(false);
@@ -60,10 +64,13 @@ const Home = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        platforms,
-        textStyles,
-      }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          platforms,
+          textStyles,
+        })
+      );
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
@@ -74,7 +81,7 @@ const Home = () => {
     setAverageColor(getAverageColor(img));
     setImageX(0);
     setImageY(0);
-    
+
     const maxDimension = Math.max(img.width, img.height);
     const coverZoom = (maxDimension / img.width) * 100;
     setZoom(coverZoom);
@@ -98,19 +105,22 @@ const Home = () => {
     setTextIdCounter(0);
   }, []);
 
-  const handleAddTextLayer = useCallback((layer: Omit<TextLayer, 'id'>) => {
-    setTextIdCounter(prev => prev + 1);
-    setTextLayers(prev => [...prev, { ...layer, id: textIdCounter + 1 }]);
-  }, [textIdCounter]);
+  const handleAddTextLayer = useCallback(
+    (layer: Omit<TextLayer, 'id'>) => {
+      setTextIdCounter((prev) => prev + 1);
+      setTextLayers((prev) => [...prev, { ...layer, id: textIdCounter + 1 }]);
+    },
+    [textIdCounter]
+  );
 
   const handleUpdateTextLayer = useCallback((id: number, updates: Partial<TextLayer>) => {
-    setTextLayers(prev => prev.map(layer =>
-      layer.id === id ? { ...layer, ...updates } : layer
-    ));
+    setTextLayers((prev) =>
+      prev.map((layer) => (layer.id === id ? { ...layer, ...updates } : layer))
+    );
   }, []);
 
   const handleDeleteTextLayer = useCallback((id: number) => {
-    setTextLayers(prev => prev.filter(layer => layer.id !== id));
+    setTextLayers((prev) => prev.filter((layer) => layer.id !== id));
   }, []);
 
   const handleSaveTextStyle = useCallback((style: Omit<TextStyle, 'id'>) => {
@@ -118,11 +128,11 @@ const Home = () => {
       ...style,
       id: Date.now().toString(),
     };
-    setTextStyles(prev => [...prev, newStyle]);
+    setTextStyles((prev) => [...prev, newStyle]);
   }, []);
 
   const handleDeleteTextStyle = useCallback((id: string) => {
-    setTextStyles(prev => prev.filter(style => style.id !== id));
+    setTextStyles((prev) => prev.filter((style) => style.id !== id));
   }, []);
 
   const handlePreviewChange = useCallback((preview: Omit<TextLayer, 'id'> | null) => {
@@ -130,86 +140,73 @@ const Home = () => {
   }, []);
 
   return (
-    <Box sx={{ minHeight: '100vh', p: 1 }}>
-      <Container maxWidth="xl" disableGutters>
-        {!image ? (
-          <ImageUploader onImageLoad={handleImageLoad} />
-        ) : (
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 1, 
-            flexWrap: 'wrap',
-          }}>
-            <Box sx={{ 
-              flex: '1 1 500px', 
-              minWidth: { xs: '100%', md: '500px' },
-            }}>
-              <Stack spacing={1}>
-                <CanvasEditor
-                  image={image}
-                  platforms={platforms}
-                  imageX={imageX}
-                  imageY={imageY}
-                  zoom={zoom}
-                  averageColor={averageColor}
-                  onPositionChange={handlePositionChange}
-                  onZoomChange={handleZoomChange}
-                  onReplaceImage={handleNewImage}
-                />
-
-                <TextControls
-                  textLayers={textLayers}
-                  textStyles={textStyles}
-                  onAddLayer={handleAddTextLayer}
-                  onUpdateLayer={handleUpdateTextLayer}
-                  onDeleteLayer={handleDeleteTextLayer}
-                  onSaveStyle={handleSaveTextStyle}
-                  onDeleteStyle={handleDeleteTextStyle}
-                  onPreviewChange={handlePreviewChange}
-                />
-              </Stack>
-            </Box>
-
-            <Box sx={{ 
-              width: { xs: '100%', md: '500px' },
-              flexShrink: 0,
-            }}>
-              <PreviewsPanel
+    <Container maxWidth="xl" sx={{ p: 1 }}>
+      {!image ? (
+        <ImageUploader onImageLoad={handleImageLoad} />
+      ) : (
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: '1 1 500px', minWidth: { xs: '100%', md: '500px' } }}>
+            <Stack spacing={1}>
+              <CanvasEditor
                 image={image}
                 platforms={platforms}
-                textLayers={textLayers}
                 imageX={imageX}
                 imageY={imageY}
                 zoom={zoom}
                 averageColor={averageColor}
-                previewText={previewText}
-                onOpenSettings={() => setPlatformDialogOpen(true)}
+                onPositionChange={handlePositionChange}
+                onZoomChange={handleZoomChange}
+                onReplaceImage={handleNewImage}
               />
-            </Box>
-          </Box>
-        )}
 
-        <Dialog
-          open={platformDialogOpen}
-          onClose={() => setPlatformDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            Configuration des plateformes
-            <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <PlatformConfigPanel
+              <TextControls
+                textLayers={textLayers}
+                textStyles={textStyles}
+                onAddLayer={handleAddTextLayer}
+                onUpdateLayer={handleUpdateTextLayer}
+                onDeleteLayer={handleDeleteTextLayer}
+                onSaveStyle={handleSaveTextStyle}
+                onDeleteStyle={handleDeleteTextStyle}
+                onPreviewChange={handlePreviewChange}
+              />
+            </Stack>
+          </Box>
+
+          <Box sx={{ width: { xs: '100%', md: '500px' }, flexShrink: 0 }}>
+            <PreviewsPanel
+              image={image}
               platforms={platforms}
-              onPlatformChange={setPlatforms}
+              textLayers={textLayers}
+              imageX={imageX}
+              imageY={imageY}
+              zoom={zoom}
+              averageColor={averageColor}
+              previewText={previewText}
+              onOpenSettings={() => setPlatformDialogOpen(true)}
             />
-          </DialogContent>
-        </Dialog>
-      </Container>
-    </Box>
+          </Box>
+        </Box>
+      )}
+
+      <Dialog
+        open={platformDialogOpen}
+        onClose={() => setPlatformDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          Configuration des formats
+          <IconButton size="small" onClick={() => setPlatformDialogOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <PlatformConfigPanel platforms={platforms} onPlatformChange={setPlatforms} />
+        </DialogContent>
+      </Dialog>
+    </Container>
   );
 };
 

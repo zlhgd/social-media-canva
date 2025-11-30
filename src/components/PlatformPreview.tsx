@@ -61,29 +61,50 @@ const PlatformPreview = ({
     canvas.width = displayWidth;
     canvas.height = displayHeight;
 
-    const exportPlatform = { ...platform, width: exportDimensions.width, height: exportDimensions.height };
+    const exportPlatform = {
+      ...platform,
+      width: exportDimensions.width,
+      height: exportDimensions.height,
+    };
     const covers = doesImageCoverCanvas(image, exportPlatform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const scale = zoom / 100 * previewScale;
+    const scale = (zoom / 100) * previewScale;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgX = (canvas.width / 2) + (imageX * previewScale) - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + (imageY * previewScale) - (imgHeight / 2);
+    const imgX = canvas.width / 2 + imageX * previewScale - imgWidth / 2;
+    const imgY = canvas.height / 2 + imageY * previewScale - imgHeight / 2;
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    textLayers.forEach(layer => {
+    textLayers.forEach((layer) => {
       drawTextLayer(ctx, layer, canvas.width, canvas.height, previewScale);
     });
 
     if (previewText) {
       ctx.globalAlpha = 0.8;
-      drawTextLayer(ctx, { ...previewText, id: PREVIEW_TEXT_ID } as TextLayer, canvas.width, canvas.height, previewScale);
+      drawTextLayer(
+        ctx,
+        { ...previewText, id: PREVIEW_TEXT_ID } as TextLayer,
+        canvas.width,
+        canvas.height,
+        previewScale
+      );
       ctx.globalAlpha = 1;
     }
-  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor, previewText, previewDimensions, exportDimensions]);
+  }, [
+    image,
+    platform,
+    textLayers,
+    imageX,
+    imageY,
+    zoom,
+    averageColor,
+    previewText,
+    previewDimensions,
+    exportDimensions,
+  ]);
 
   useEffect(() => {
     render();
@@ -99,7 +120,11 @@ const PlatformPreview = ({
     canvas.width = exportDimensions.width;
     canvas.height = exportDimensions.height;
 
-    const exportPlatform = { ...platform, width: exportDimensions.width, height: exportDimensions.height };
+    const exportPlatform = {
+      ...platform,
+      width: exportDimensions.width,
+      height: exportDimensions.height,
+    };
     const covers = doesImageCoverCanvas(image, exportPlatform, imageX, imageY, zoom);
     ctx.fillStyle = covers ? '#2d2d2d' : averageColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -107,12 +132,12 @@ const PlatformPreview = ({
     const scale = zoom / 100;
     const imgWidth = image.width * scale;
     const imgHeight = image.height * scale;
-    const imgX = (canvas.width / 2) + imageX - (imgWidth / 2);
-    const imgY = (canvas.height / 2) + imageY - (imgHeight / 2);
+    const imgX = canvas.width / 2 + imageX - imgWidth / 2;
+    const imgY = canvas.height / 2 + imageY - imgHeight / 2;
 
     ctx.drawImage(image, imgX, imgY, imgWidth, imgHeight);
 
-    textLayers.forEach(layer => {
+    textLayers.forEach((layer) => {
       drawTextLayer(ctx, layer, canvas.width, canvas.height, 1);
     });
 
@@ -127,18 +152,16 @@ const PlatformPreview = ({
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
           <Box>
-            <Typography variant="body2">
-              {platform.name}
-            </Typography>
+            <Typography variant="body2">{platform.name}</Typography>
             <Typography variant="caption">
               {platform.width}×{platform.height}
             </Typography>
           </Box>
-          <Button 
-            variant="contained" 
-            color="success" 
-            size="small" 
-            startIcon={<DownloadIcon />} 
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            startIcon={<DownloadIcon />}
             onClick={handleDownload}
           >
             Télécharger

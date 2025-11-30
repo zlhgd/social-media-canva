@@ -1,8 +1,21 @@
 'use client';
 
 import { Stack, Divider } from '@mui/material';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { PlatformConfig } from '@/types';
 import PlatformConfigItem from './PlatformConfigItem';
 import PlatformForm from './PlatformForm';
@@ -13,7 +26,6 @@ interface PlatformConfigPanelProps {
 }
 
 const PlatformConfigPanel = ({ platforms, onPlatformChange }: PlatformConfigPanelProps) => {
-  
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -32,14 +44,12 @@ const PlatformConfigPanel = ({ platforms, onPlatformChange }: PlatformConfigPane
   };
 
   const handleUpdate = (platformId: string, updates: Partial<PlatformConfig>) => {
-    const updatedPlatforms = platforms.map(p => 
-      p.id === platformId ? { ...p, ...updates } : p
-    );
+    const updatedPlatforms = platforms.map((p) => (p.id === platformId ? { ...p, ...updates } : p));
     onPlatformChange(updatedPlatforms);
   };
 
   const handleDelete = (platformId: string) => {
-    const updatedPlatforms = platforms.filter(p => p.id !== platformId);
+    const updatedPlatforms = platforms.filter((p) => p.id !== platformId);
     onPlatformChange(updatedPlatforms);
   };
 
@@ -49,18 +59,22 @@ const PlatformConfigPanel = ({ platforms, onPlatformChange }: PlatformConfigPane
       name,
       width,
       height,
-      color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+      color:
+        '#' +
+        Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, '0'),
       visible: true,
     };
-    
+
     onPlatformChange([...platforms, newPlatform]);
   };
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={platforms.map(p => p.id)} strategy={verticalListSortingStrategy}>
-          <Stack spacing={0.75}>
+        <SortableContext items={platforms.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+          <Stack spacing={1}>
             {platforms.map((platform) => (
               <PlatformConfigItem
                 key={platform.id}
@@ -72,9 +86,9 @@ const PlatformConfigPanel = ({ platforms, onPlatformChange }: PlatformConfigPane
           </Stack>
         </SortableContext>
       </DndContext>
-      
+
       <Divider />
-      
+
       <PlatformForm onAdd={handleAddPlatform} />
     </Stack>
   );

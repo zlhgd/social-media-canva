@@ -15,12 +15,12 @@ const PlatformForm = ({ onAdd }: PlatformFormProps) => {
 
   const handleAddPlatform = () => {
     if (!newPlatformName.trim()) return;
-    
+
     const width = parseInt(newPlatformWidth) || 1080;
     const height = parseInt(newPlatformHeight) || 1080;
-    
+
     if (width < 100 || width > 4000 || height < 100 || height > 4000) return;
-    
+
     onAdd(newPlatformName.trim(), width, height);
     setNewPlatformName('');
     setNewPlatformWidth('1080');
@@ -42,7 +42,7 @@ const PlatformForm = ({ onAdd }: PlatformFormProps) => {
         label="Largeur"
         value={newPlatformWidth}
         onChange={(e) => setNewPlatformWidth(e.target.value)}
-        inputProps={{ min: 100, max: 4000, step: 10 }}
+        slotProps={{ htmlInput: { min: 100, max: 4000, step: 10 } }}
         sx={{ width: 90 }}
       />
       <Typography variant="body2">×</Typography>
@@ -52,7 +52,7 @@ const PlatformForm = ({ onAdd }: PlatformFormProps) => {
         label="Hauteur"
         value={newPlatformHeight}
         onChange={(e) => setNewPlatformHeight(e.target.value)}
-        inputProps={{ min: 100, max: 4000, step: 10 }}
+        slotProps={{ htmlInput: { min: 100, max: 4000, step: 10 } }}
         sx={{ width: 90 }}
       />
       <Button
