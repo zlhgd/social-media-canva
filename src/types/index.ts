@@ -21,6 +21,7 @@ export interface TextLayer {
   text: string;
   fontFamily: string;
   fontSize: number;
+  lineHeight: number;
   color: string;
   backgroundColor: string;
   showBackground: boolean;
@@ -38,6 +39,7 @@ export interface TextStyle {
   name: string;
   fontFamily: string;
   fontSize: number;
+  lineHeight: number;
   color: string;
   backgroundColor: string;
   showBackground: boolean;

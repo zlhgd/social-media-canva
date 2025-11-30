@@ -11,7 +11,8 @@ This is a Next.js application for creating social media visuals optimized for In
 - Follow React best practices and hooks patterns
 - Keep components focused on single responsibilities
 - Use meaningful variable and function names
-- Keep every components in its own file
+- Keep every components in its own file (a component should never have more than 200 lines)
+- Use short syntax: arrow functions, direct return, etc.
 
 ### File Organization
 - `/src/app` - Next.js app router pages
@@ -34,6 +35,8 @@ This is a Next.js application for creating social media visuals optimized for In
 - Use modals/dialogs for secondary configurations
 - Provide visual feedback for all interactions
 - Support both mouse and touch interactions
+- Each component should have stories in Storybook, with each prop demoed
+- Use as less as possible hardcoded style, prefer MUI theme variables. hex colors are forbidden
 
 ### Performance
 - Use `useCallback` and `useMemo` appropriately

@@ -103,7 +103,7 @@ export function drawTextLayer(
   const fontSize = layer.fontSize * scale;
   const padding = layer.padding * scale;
   const borderRadius = layer.borderRadius * scale;
-  const lineHeight = fontSize * LINE_HEIGHT_MULTIPLIER;
+  const lineHeight = fontSize * layer.lineHeight;
   
   let fontStyle = '';
   if (layer.isItalic) fontStyle += 'italic ';

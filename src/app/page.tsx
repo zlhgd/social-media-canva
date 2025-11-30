@@ -28,9 +28,13 @@ function loadFromLocalStorage() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
+      const textStyles = (parsed.textStyles || []).map((style: TextStyle) => ({
+        ...style,
+        lineHeight: style.lineHeight ?? 1.2,
+      }));
       return {
         platforms: parsed.platforms || DEFAULT_PLATFORMS,
-        textStyles: parsed.textStyles || [],
+        textStyles,
       };
     }
   } catch (error) {
