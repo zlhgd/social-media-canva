@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+build
+dist
+coverage
+.storybook-static
+*.min.js
+*.min.css
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

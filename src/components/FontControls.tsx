@@ -1,6 +1,15 @@
 'use client';
 
-import { Stack, FormControl, InputLabel, Select, MenuItem, TextField, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import {
+  Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  ToggleButtonGroup,
+  ToggleButton,
+} from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import ColorPicker from './ColorPicker';
@@ -40,45 +49,51 @@ const FontControls = ({
   };
 
   return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+    <Stack direction="row" flexWrap="wrap" sx={{ gap: 0.5, m: 0 }}>
       <FormControl size="small" sx={{ minWidth: 100 }}>
         <InputLabel>Police</InputLabel>
-        <Select value={fontFamily} label="Police" onChange={(e) => onFontFamilyChange(e.target.value)}>
+        <Select
+          value={fontFamily}
+          label="Police"
+          onChange={(e) => onFontFamilyChange(e.target.value)}
+        >
           {FONT_OPTIONS.map((font) => (
-            <MenuItem key={font} value={font} style={{ fontFamily: font }}>{font}</MenuItem>
+            <MenuItem key={font} value={font} style={{ fontFamily: font }}>
+              {font}
+            </MenuItem>
           ))}
         </Select>
       </FormControl>
 
-      <TextField 
-        type="number" 
-        size="small" 
-        label="Taille" 
-        value={fontSize} 
-        onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 48)} 
-        inputProps={{ min: 12, max: 200, step: 1 }} 
-        sx={{ width: 70 }} 
+      <TextField
+        type="number"
+        size="small"
+        label="Taille"
+        value={fontSize}
+        onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 48)}
+        inputProps={{ min: 12, max: 200, step: 1 }}
+        sx={{ width: 70 }}
       />
 
-      <TextField 
-        type="number" 
-        size="small" 
-        label="Hauteur" 
-        value={lineHeight} 
-        onChange={(e) => onLineHeightChange(parseFloat(e.target.value) || 1.2)} 
-        inputProps={{ min: 0.5, max: 3, step: 0.1 }} 
-        sx={{ width: 75 }} 
+      <TextField
+        type="number"
+        size="small"
+        label="Hauteur"
+        value={lineHeight}
+        onChange={(e) => onLineHeightChange(parseFloat(e.target.value) || 1.2)}
+        inputProps={{ min: 0.5, max: 3, step: 0.1 }}
+        sx={{ width: 75 }}
       />
 
-      <ColorPicker 
-        color={color} 
-        label="Texte" 
-        onChange={onColorChange} 
-      />
+      <ColorPicker color={color} onChange={onColorChange} />
 
       <ToggleButtonGroup value={styles} onChange={handleStyleChange} size="small">
-        <ToggleButton value="bold"><FormatBoldIcon /></ToggleButton>
-        <ToggleButton value="italic"><FormatItalicIcon /></ToggleButton>
+        <ToggleButton value="bold">
+          <FormatBoldIcon />
+        </ToggleButton>
+        <ToggleButton value="italic">
+          <FormatItalicIcon />
+        </ToggleButton>
       </ToggleButtonGroup>
     </Stack>
   );

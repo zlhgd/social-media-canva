@@ -19,11 +19,11 @@ interface TextLayerBlockProps {
   onSaveStyle: (_layer: TextLayer) => void;
 }
 
-const TextLayerBlock = ({ 
-  layer, 
+const TextLayerBlock = ({
+  layer,
   textStyles,
-  onUpdateLayer, 
-  onDeleteLayer, 
+  onUpdateLayer,
+  onDeleteLayer,
   onSaveStyle,
 }: TextLayerBlockProps) => {
   const [text, setText] = useState(layer.text);
@@ -71,12 +71,33 @@ const TextLayerBlock = ({
         },
       });
     }
-  }, [layer.id, text, fontFamily, fontSize, lineHeight, color, backgroundColor, showBackground, padding, borderRadius, isBold, isItalic, verticalAlign, distanceFromEdge, shadowEnabled, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY, onUpdateLayer]);
+  }, [
+    layer.id,
+    text,
+    fontFamily,
+    fontSize,
+    lineHeight,
+    color,
+    backgroundColor,
+    showBackground,
+    padding,
+    borderRadius,
+    isBold,
+    isItalic,
+    verticalAlign,
+    distanceFromEdge,
+    shadowEnabled,
+    shadowColor,
+    shadowBlur,
+    shadowOffsetX,
+    shadowOffsetY,
+    onUpdateLayer,
+  ]);
 
   const handleApplyStyle = (styleId: string) => {
-    const style = textStyles.find(s => s.id === styleId);
+    const style = textStyles.find((s) => s.id === styleId);
     if (!style) return;
-    
+
     setFontFamily(style.fontFamily);
     setFontSize(style.fontSize);
     setLineHeight(style.lineHeight);
@@ -125,17 +146,17 @@ const TextLayerBlock = ({
     <Card variant="outlined" sx={{ border: '1px solid', borderColor: 'divider' }}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5, gap: 0.5 }}>
-          <Button 
-            size="small" 
-            startIcon={<SaveIcon />} 
+          <Button
+            size="small"
+            startIcon={<SaveIcon />}
             onClick={handleSaveStyle}
             sx={{ minWidth: 'auto', px: 1 }}
           >
             Sauver
           </Button>
-          <IconButton 
-            size="small" 
-            onClick={() => onDeleteLayer(layer.id)} 
+          <IconButton
+            size="small"
+            onClick={() => onDeleteLayer(layer.id)}
             color="error"
             sx={{ p: 0.5 }}
           >
@@ -157,14 +178,21 @@ const TextLayerBlock = ({
             />
           </Box>
           <Box sx={{ flex: 1 }}>
-            <Stack spacing={0.75}>
-              <StyleSelector 
-                textStyles={textStyles} 
-                selectedStyleId={selectedStyleId} 
-                onApplyStyle={handleApplyStyle} 
+            <Stack spacing={2}>
+              <PositionControls
+                verticalAlign={verticalAlign}
+                distanceFromEdge={distanceFromEdge}
+                onVerticalAlignChange={setVerticalAlign}
+                onDistanceFromEdgeChange={setDistanceFromEdge}
               />
 
-              <FontControls 
+              <StyleSelector
+                textStyles={textStyles}
+                selectedStyleId={selectedStyleId}
+                onApplyStyle={handleApplyStyle}
+              />
+
+              <FontControls
                 fontFamily={fontFamily}
                 fontSize={fontSize}
                 lineHeight={lineHeight}
@@ -181,7 +209,7 @@ const TextLayerBlock = ({
                 }}
               />
 
-              <BackgroundControls 
+              <BackgroundControls
                 showBackground={showBackground}
                 backgroundColor={backgroundColor}
                 padding={padding}
@@ -192,14 +220,7 @@ const TextLayerBlock = ({
                 onBorderRadiusChange={setBorderRadius}
               />
 
-              <PositionControls 
-                verticalAlign={verticalAlign}
-                distanceFromEdge={distanceFromEdge}
-                onVerticalAlignChange={setVerticalAlign}
-                onDistanceFromEdgeChange={setDistanceFromEdge}
-              />
-
-              <ShadowControls 
+              <ShadowControls
                 enabled={shadowEnabled}
                 color={shadowColor}
                 blur={shadowBlur}

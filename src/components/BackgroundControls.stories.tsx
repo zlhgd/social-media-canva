@@ -31,35 +31,8 @@ export const Hidden: Story = {
 export const Visible: Story = {
   args: {
     showBackground: true,
-    backgroundColor: '#000000',
-    padding: 10,
-    borderRadius: 4,
-  },
-};
-
-export const ColoredBackground: Story = {
-  args: {
-    showBackground: true,
     backgroundColor: '#ff5733',
     padding: 20,
     borderRadius: 8,
-  },
-};
-
-export const LargePadding: Story = {
-  args: {
-    showBackground: true,
-    backgroundColor: '#3498db',
-    padding: 30,
-    borderRadius: 12,
-  },
-};
-
-export const SharpCorners: Story = {
-  args: {
-    showBackground: true,
-    backgroundColor: '#2ecc71',
-    padding: 15,
-    borderRadius: 0,
   },
 };

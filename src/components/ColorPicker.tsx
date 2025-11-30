@@ -1,25 +1,19 @@
 'use client';
 
-import { Box, Popover, Typography } from '@mui/material';
+import { Box, Popover } from '@mui/material';
 import { Sketch } from '@uiw/react-color';
 import { useState } from 'react';
 
 interface ColorPickerProps {
   color: string;
-  label?: string;
   onChange: (_color: string) => void;
 }
 
-const ColorPicker = ({ color, label, onChange }: ColorPickerProps) => {
+const ColorPicker = ({ color, onChange }: ColorPickerProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   return (
     <Box>
-      {label && (
-        <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
-          {label}
-        </Typography>
-      )}
       <Box
         onClick={(e) => setAnchorEl(e.currentTarget)}
         sx={{

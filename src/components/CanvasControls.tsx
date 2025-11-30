@@ -27,6 +27,7 @@ const CanvasControls = ({
         </Button>
       </Tooltip>
     </ButtonGroup>
+
     <ButtonGroup size="small">
       <Tooltip title="Centrer horizontalement">
         <Button onClick={onCenterH}>
@@ -39,11 +40,10 @@ const CanvasControls = ({
         </Button>
       </Tooltip>
     </ButtonGroup>
-    {onReplaceImage && (
-      <Button size="small" startIcon={<RefreshIcon />} onClick={onReplaceImage}>
-        Remplacer
-      </Button>
-    )}
+
+    <Button variant="outlined" size="small" onClick={onReplaceImage}>
+      Remplacer
+    </Button>
   </Stack>
 );
 

@@ -21,24 +21,3 @@ export const Default: Story = {
     color: '#ff5733',
   },
 };
-
-export const WithLabel: Story = {
-  args: {
-    color: '#3498db',
-    label: 'Couleur de fond',
-  },
-};
-
-export const Black: Story = {
-  args: {
-    color: '#000000',
-    label: 'Noir',
-  },
-};
-
-export const White: Story = {
-  args: {
-    color: '#ffffff',
-    label: 'Blanc',
-  },
-};

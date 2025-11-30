@@ -28,51 +28,47 @@ const ShadowControls = ({
   onOffsetXChange,
   onOffsetYChange,
 }: ShadowControlsProps) => (
-  <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-    <FormControlLabel 
+  <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" sx={{ height: 40 }}>
+    <FormControlLabel
       control={
-        <Switch 
-          checked={enabled} 
-          onChange={(e) => onEnabledChange(e.target.checked)} 
-          size="small" 
+        <Switch
+          checked={enabled}
+          onChange={(e) => onEnabledChange(e.target.checked)}
+          size="small"
         />
-      } 
-      label="Ombre" 
-      sx={{ mr: 0.5 }} 
+      }
+      label="Ombre"
+      sx={{ mr: 0.5 }}
     />
     {enabled && (
       <>
-        <ColorPicker 
-          color={color} 
-          label="Couleur" 
-          onChange={onColorChange} 
+        <ColorPicker color={color} onChange={onColorChange} />
+        <TextField
+          type="number"
+          size="small"
+          label="Flou"
+          value={blur}
+          onChange={(e) => onBlurChange(parseInt(e.target.value) || 0)}
+          inputProps={{ min: 0, max: 50, step: 1 }}
+          sx={{ width: 55 }}
         />
-        <TextField 
-          type="number" 
-          size="small" 
-          label="Flou" 
-          value={blur} 
-          onChange={(e) => onBlurChange(parseInt(e.target.value) || 0)} 
-          inputProps={{ min: 0, max: 50, step: 1 }} 
-          sx={{ width: 55 }} 
+        <TextField
+          type="number"
+          size="small"
+          label="X"
+          value={offsetX}
+          onChange={(e) => onOffsetXChange(parseInt(e.target.value) || 0)}
+          inputProps={{ min: -50, max: 50, step: 1 }}
+          sx={{ width: 50 }}
         />
-        <TextField 
-          type="number" 
-          size="small" 
-          label="X" 
-          value={offsetX} 
-          onChange={(e) => onOffsetXChange(parseInt(e.target.value) || 0)} 
-          inputProps={{ min: -50, max: 50, step: 1 }} 
-          sx={{ width: 50 }} 
-        />
-        <TextField 
-          type="number" 
-          size="small" 
-          label="Y" 
-          value={offsetY} 
-          onChange={(e) => onOffsetYChange(parseInt(e.target.value) || 0)} 
-          inputProps={{ min: -50, max: 50, step: 1 }} 
-          sx={{ width: 50 }} 
+        <TextField
+          type="number"
+          size="small"
+          label="Y"
+          value={offsetY}
+          onChange={(e) => onOffsetYChange(parseInt(e.target.value) || 0)}
+          inputProps={{ min: -50, max: 50, step: 1 }}
+          sx={{ width: 50 }}
         />
       </>
     )}

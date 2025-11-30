@@ -8,13 +8,20 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
       "eslint --fix",
+      "git add"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write",
       "git add"
     ]
   },
@@ -46,10 +53,13 @@
     "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9",
     "eslint-config-next": "16.0.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-storybook": "^10.1.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "playwright": "^1.57.0",
+    "prettier": "^3.7.3",
     "storybook": "^10.1.2",
     "typescript": "^5",
     "vite": "^7.2.4",

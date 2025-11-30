@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    fontFamily: 'Inter',
+    fontFamily: 'Futura',
     fontSize: 48,
     lineHeight: 1.2,
     color: '#ffffff',
