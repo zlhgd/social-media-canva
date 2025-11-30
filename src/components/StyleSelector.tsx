@@ -10,7 +10,7 @@ interface StyleSelectorProps {
   onApplyStyle: (_styleId: string) => void;
 }
 
-export default function StyleSelector({ textStyles, selectedStyleId, onApplyStyle }: StyleSelectorProps) {
+const StyleSelector = ({ textStyles, selectedStyleId, onApplyStyle }: StyleSelectorProps) => {
   if (textStyles.length === 0) return null;
 
   return (
@@ -46,4 +46,6 @@ export default function StyleSelector({ textStyles, selectedStyleId, onApplyStyl
       </Select>
     </FormControl>
   );
-}
+};
+
+export default StyleSelector;

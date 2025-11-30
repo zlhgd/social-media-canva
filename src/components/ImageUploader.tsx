@@ -9,7 +9,7 @@ interface ImageUploaderProps {
   onImageLoad: (_image: HTMLImageElement) => void;
 }
 
-export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
+const ImageUploader = ({ onImageLoad }: ImageUploaderProps) => {
   const loadImage = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -116,4 +116,6 @@ export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {
       </Box>
     </Box>
   );
-}
+};
+
+export default ImageUploader;

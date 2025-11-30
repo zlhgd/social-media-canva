@@ -17,7 +17,7 @@ interface PlatformConfigItemProps {
   onDelete: (_id: string) => void;
 }
 
-export default function PlatformConfigItem({ platform, onUpdate, onDelete }: PlatformConfigItemProps) {
+const PlatformConfigItem = ({ platform, onUpdate, onDelete }: PlatformConfigItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: platform.id });
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
 
@@ -95,4 +95,6 @@ export default function PlatformConfigItem({ platform, onUpdate, onDelete }: Pla
       </IconButton>
     </Box>
   );
-}
+};
+
+export default PlatformConfigItem;

@@ -27,12 +27,18 @@ const eslintConfig = defineConfig([
       'react-hooks/exhaustive-deps': 'warn',
       'prefer-const': 'warn',
       'no-var': 'error',
-      'prefer-arrow-callback': 'warn',
+      'prefer-arrow-callback': 'error',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
+      'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
       'complexity': ['warn', 10],
+      'func-style': ['error', 'expression', { allowArrowFunctions: true }],
+      'arrow-body-style': ['error', 'as-needed'],
+      'react/function-component-definition': ['error', {
+        namedComponents: 'arrow-function',
+        unnamedComponents: 'arrow-function'
+      }]
     },
   },
 ]);

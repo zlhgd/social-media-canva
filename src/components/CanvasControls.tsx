@@ -13,38 +13,38 @@ interface CanvasControlsProps {
   onReplaceImage?: () => void;
 }
 
-export default function CanvasControls({
+const CanvasControls = ({
   onCoverMode,
   onCenterH,
   onCenterV,
   onReplaceImage,
-}: CanvasControlsProps) {
-  return (
-    <Stack direction="row" spacing={1} justifyContent="center">
-      <ButtonGroup size="small">
-        <Tooltip title="Réinitialiser">
-          <Button onClick={onCoverMode}>
-            <CropFreeIcon />
-          </Button>
-        </Tooltip>
-      </ButtonGroup>
-      <ButtonGroup size="small">
-        <Tooltip title="Centrer horizontalement">
-          <Button onClick={onCenterH}>
-            <AlignHorizontalCenterIcon />
-          </Button>
-        </Tooltip>
-        <Tooltip title="Centrer verticalement">
-          <Button onClick={onCenterV}>
-            <AlignVerticalCenterIcon />
-          </Button>
-        </Tooltip>
-      </ButtonGroup>
-      {onReplaceImage && (
-        <Button size="small" startIcon={<RefreshIcon />} onClick={onReplaceImage}>
-          Remplacer
+}: CanvasControlsProps) => (
+  <Stack direction="row" spacing={1} justifyContent="center">
+    <ButtonGroup size="small">
+      <Tooltip title="Réinitialiser">
+        <Button onClick={onCoverMode}>
+          <CropFreeIcon />
         </Button>
-      )}
-    </Stack>
-  );
-}
+      </Tooltip>
+    </ButtonGroup>
+    <ButtonGroup size="small">
+      <Tooltip title="Centrer horizontalement">
+        <Button onClick={onCenterH}>
+          <AlignHorizontalCenterIcon />
+        </Button>
+      </Tooltip>
+      <Tooltip title="Centrer verticalement">
+        <Button onClick={onCenterV}>
+          <AlignVerticalCenterIcon />
+        </Button>
+      </Tooltip>
+    </ButtonGroup>
+    {onReplaceImage && (
+      <Button size="small" startIcon={<RefreshIcon />} onClick={onReplaceImage}>
+        Remplacer
+      </Button>
+    )}
+  </Stack>
+);
+
+export default CanvasControls;

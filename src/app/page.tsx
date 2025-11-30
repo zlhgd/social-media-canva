@@ -19,7 +19,7 @@ import PreviewsPanel from '@/components/PreviewsPanel';
 import { PlatformConfig, TextLayer, TextStyle, DEFAULT_PLATFORMS, STORAGE_KEY } from '@/types';
 import { getAverageColor } from '@/lib/canvas-utils';
 
-function loadFromLocalStorage() {
+const loadFromLocalStorage = () => {
   if (typeof window === 'undefined') return { platforms: DEFAULT_PLATFORMS, textStyles: [] };
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -42,9 +42,9 @@ function loadFromLocalStorage() {
     console.error('Error loading from localStorage:', error);
   }
   return { platforms: DEFAULT_PLATFORMS, textStyles: [] };
-}
+};
 
-export default function Home() {
+const Home = () => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [platforms, setPlatforms] = useState<PlatformConfig[]>(() => loadFromLocalStorage().platforms);
   const [imageX, setImageX] = useState(0);
@@ -211,4 +211,6 @@ export default function Home() {
       </Container>
     </Box>
   );
-}
+};
+
+export default Home;

@@ -7,10 +7,10 @@ import { useState } from 'react';
 interface ColorPickerProps {
   color: string;
   label?: string;
-  onChange: (color: string) => void;
+  onChange: (_color: string) => void;
 }
 
-export default function ColorPicker({ color, label, onChange }: ColorPickerProps) {
+const ColorPicker = ({ color, label, onChange }: ColorPickerProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   return (
@@ -42,4 +42,6 @@ export default function ColorPicker({ color, label, onChange }: ColorPickerProps
       </Popover>
     </Box>
   );
-}
+};
+
+export default ColorPicker;

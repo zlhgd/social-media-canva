@@ -20,7 +20,7 @@ interface PreviewsPanelProps {
   onOpenSettings: () => void;
 }
 
-export default function PreviewsPanel({
+const PreviewsPanel = ({
   image,
   platforms,
   textLayers,
@@ -30,7 +30,7 @@ export default function PreviewsPanel({
   averageColor,
   previewText,
   onOpenSettings,
-}: PreviewsPanelProps) {
+}: PreviewsPanelProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(468);
 
@@ -150,4 +150,6 @@ export default function PreviewsPanel({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default PreviewsPanel;

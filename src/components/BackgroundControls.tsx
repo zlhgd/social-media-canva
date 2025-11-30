@@ -8,13 +8,13 @@ interface BackgroundControlsProps {
   backgroundColor: string;
   padding: number;
   borderRadius: number;
-  onShowBackgroundChange: (show: boolean) => void;
-  onBackgroundColorChange: (color: string) => void;
-  onPaddingChange: (padding: number) => void;
-  onBorderRadiusChange: (radius: number) => void;
+  onShowBackgroundChange: (_show: boolean) => void;
+  onBackgroundColorChange: (_color: string) => void;
+  onPaddingChange: (_padding: number) => void;
+  onBorderRadiusChange: (_radius: number) => void;
 }
 
-export default function BackgroundControls({
+const BackgroundControls = ({
   showBackground,
   backgroundColor,
   padding,
@@ -23,8 +23,7 @@ export default function BackgroundControls({
   onBackgroundColorChange,
   onPaddingChange,
   onBorderRadiusChange,
-}: BackgroundControlsProps) {
-  return (
+}: BackgroundControlsProps) => (
     <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
       <FormControlLabel 
         control={
@@ -65,5 +64,6 @@ export default function BackgroundControls({
         </>
       )}
     </Stack>
-  );
-}
+);
+
+export default BackgroundControls;

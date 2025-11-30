@@ -8,7 +8,7 @@ interface PlatformFormProps {
   onAdd: (_name: string, _width: number, _height: number) => void;
 }
 
-export default function PlatformForm({ onAdd }: PlatformFormProps) {
+const PlatformForm = ({ onAdd }: PlatformFormProps) => {
   const [newPlatformName, setNewPlatformName] = useState('');
   const [newPlatformWidth, setNewPlatformWidth] = useState('1080');
   const [newPlatformHeight, setNewPlatformHeight] = useState('1080');
@@ -66,4 +66,6 @@ export default function PlatformForm({ onAdd }: PlatformFormProps) {
       </Button>
     </Box>
   );
-}
+};
+
+export default PlatformForm;

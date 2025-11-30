@@ -17,7 +17,7 @@ interface TextControlsProps {
   onPreviewChange?: (_preview: Omit<TextLayer, 'id'> | null) => void;
 }
 
-export default function TextControls({
+const TextControls = ({
   textLayers,
   textStyles,
   onAddLayer,
@@ -25,7 +25,7 @@ export default function TextControls({
   onDeleteLayer,
   onSaveStyle,
   onDeleteStyle,
-}: TextControlsProps) {
+}: TextControlsProps) => {
   const [saveStyleDialogOpen, setSaveStyleDialogOpen] = useState(false);
   const [styleName, setStyleName] = useState('');
   const [styleToSave, setStyleToSave] = useState<Omit<TextStyle, 'id' | 'name'> | null>(null);
@@ -143,4 +143,6 @@ export default function TextControls({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default TextControls;

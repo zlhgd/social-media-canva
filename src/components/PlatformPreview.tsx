@@ -21,7 +21,7 @@ interface PlatformPreviewProps {
   containerWidth: number;
 }
 
-export default function PlatformPreview({
+const PlatformPreview = ({
   platform,
   image,
   textLayers,
@@ -32,7 +32,7 @@ export default function PlatformPreview({
   previewText,
   exportDimensions,
   containerWidth,
-}: PlatformPreviewProps) {
+}: PlatformPreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const previewDimensions = useMemo(() => {
@@ -150,4 +150,6 @@ export default function PlatformPreview({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default PlatformPreview;

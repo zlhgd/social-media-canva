@@ -12,7 +12,7 @@ interface PlatformConfigPanelProps {
   onPlatformChange: (_platforms: PlatformConfig[]) => void;
 }
 
-export default function PlatformConfigPanel({ platforms, onPlatformChange }: PlatformConfigPanelProps) {
+const PlatformConfigPanel = ({ platforms, onPlatformChange }: PlatformConfigPanelProps) => {
   
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -78,4 +78,6 @@ export default function PlatformConfigPanel({ platforms, onPlatformChange }: Pla
       <PlatformForm onAdd={handleAddPlatform} />
     </Stack>
   );
-}
+};
+
+export default PlatformConfigPanel;

@@ -16,7 +16,7 @@ interface ShadowControlsProps {
   onOffsetYChange: (_offsetY: number) => void;
 }
 
-export default function ShadowControls({
+const ShadowControls = ({
   enabled,
   color,
   blur,
@@ -27,56 +27,56 @@ export default function ShadowControls({
   onBlurChange,
   onOffsetXChange,
   onOffsetYChange,
-}: ShadowControlsProps) {
-  return (
-    <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-      <FormControlLabel 
-        control={
-          <Switch 
-            checked={enabled} 
-            onChange={(e) => onEnabledChange(e.target.checked)} 
-            size="small" 
-          />
-        } 
-        label="Ombre" 
-        sx={{ mr: 0.5 }} 
-      />
-      {enabled && (
-        <>
-          <ColorPicker 
-            color={color} 
-            label="Couleur" 
-            onChange={onColorChange} 
-          />
-          <TextField 
-            type="number" 
-            size="small" 
-            label="Flou" 
-            value={blur} 
-            onChange={(e) => onBlurChange(parseInt(e.target.value) || 0)} 
-            inputProps={{ min: 0, max: 50, step: 1 }} 
-            sx={{ width: 55 }} 
-          />
-          <TextField 
-            type="number" 
-            size="small" 
-            label="X" 
-            value={offsetX} 
-            onChange={(e) => onOffsetXChange(parseInt(e.target.value) || 0)} 
-            inputProps={{ min: -50, max: 50, step: 1 }} 
-            sx={{ width: 50 }} 
-          />
-          <TextField 
-            type="number" 
-            size="small" 
-            label="Y" 
-            value={offsetY} 
-            onChange={(e) => onOffsetYChange(parseInt(e.target.value) || 0)} 
-            inputProps={{ min: -50, max: 50, step: 1 }} 
-            sx={{ width: 50 }} 
-          />
-        </>
-      )}
-    </Stack>
-  );
-}
+}: ShadowControlsProps) => (
+  <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
+    <FormControlLabel 
+      control={
+        <Switch 
+          checked={enabled} 
+          onChange={(e) => onEnabledChange(e.target.checked)} 
+          size="small" 
+        />
+      } 
+      label="Ombre" 
+      sx={{ mr: 0.5 }} 
+    />
+    {enabled && (
+      <>
+        <ColorPicker 
+          color={color} 
+          label="Couleur" 
+          onChange={onColorChange} 
+        />
+        <TextField 
+          type="number" 
+          size="small" 
+          label="Flou" 
+          value={blur} 
+          onChange={(e) => onBlurChange(parseInt(e.target.value) || 0)} 
+          inputProps={{ min: 0, max: 50, step: 1 }} 
+          sx={{ width: 55 }} 
+        />
+        <TextField 
+          type="number" 
+          size="small" 
+          label="X" 
+          value={offsetX} 
+          onChange={(e) => onOffsetXChange(parseInt(e.target.value) || 0)} 
+          inputProps={{ min: -50, max: 50, step: 1 }} 
+          sx={{ width: 50 }} 
+        />
+        <TextField 
+          type="number" 
+          size="small" 
+          label="Y" 
+          value={offsetY} 
+          onChange={(e) => onOffsetYChange(parseInt(e.target.value) || 0)} 
+          inputProps={{ min: -50, max: 50, step: 1 }} 
+          sx={{ width: 50 }} 
+        />
+      </>
+    )}
+  </Stack>
+);
+
+export default ShadowControls;

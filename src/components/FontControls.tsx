@@ -13,14 +13,14 @@ interface FontControlsProps {
   color: string;
   isBold: boolean;
   isItalic: boolean;
-  onFontFamilyChange: (font: string) => void;
-  onFontSizeChange: (size: number) => void;
-  onLineHeightChange: (height: number) => void;
-  onColorChange: (color: string) => void;
-  onStyleChange: (bold: boolean, italic: boolean) => void;
+  onFontFamilyChange: (_font: string) => void;
+  onFontSizeChange: (_size: number) => void;
+  onLineHeightChange: (_height: number) => void;
+  onColorChange: (_color: string) => void;
+  onStyleChange: (_bold: boolean, _italic: boolean) => void;
 }
 
-export default function FontControls({
+const FontControls = ({
   fontFamily,
   fontSize,
   lineHeight,
@@ -32,7 +32,7 @@ export default function FontControls({
   onLineHeightChange,
   onColorChange,
   onStyleChange,
-}: FontControlsProps) {
+}: FontControlsProps) => {
   const styles = [...(isBold ? ['bold'] : []), ...(isItalic ? ['italic'] : [])];
 
   const handleStyleChange = (_: React.MouseEvent<HTMLElement>, newStyles: string[]) => {
@@ -82,4 +82,6 @@ export default function FontControls({
       </ToggleButtonGroup>
     </Stack>
   );
-}
+};
+
+export default FontControls;

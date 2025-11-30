@@ -19,13 +19,13 @@ interface TextLayerBlockProps {
   onSaveStyle: (_layer: TextLayer) => void;
 }
 
-export default function TextLayerBlock({ 
+const TextLayerBlock = ({ 
   layer, 
   textStyles,
   onUpdateLayer, 
   onDeleteLayer, 
   onSaveStyle,
-}: TextLayerBlockProps) {
+}: TextLayerBlockProps) => {
   const [text, setText] = useState(layer.text);
   const [fontFamily, setFontFamily] = useState(layer.fontFamily);
   const [fontSize, setFontSize] = useState(layer.fontSize);
@@ -217,4 +217,6 @@ export default function TextLayerBlock({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default TextLayerBlock;
