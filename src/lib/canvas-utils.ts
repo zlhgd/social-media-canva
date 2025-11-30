@@ -117,32 +117,32 @@ export function drawTextLayer(
   const lines = layer.text.split('\n');
   const lineCount = lines.length;
   
-  // Calculate total text block dimensions
-  let maxLineWidth = 0;
-  lines.forEach(line => {
-    const metrics = ctx.measureText(line);
-    if (metrics.width > maxLineWidth) maxLineWidth = metrics.width;
-  });
+  // Calculate line widths
+  const lineWidths = lines.map(line => ctx.measureText(line).width);
   
   const textBlockHeight = lineCount * lineHeight;
   
   const x = canvasWidth / 2;
   const centerY = calculateTextY(layer, canvasHeight, textBlockHeight, padding, scale);
 
-  // Calculate background bounds
-  const bgX = x - maxLineWidth / 2 - padding;
-  const bgY = centerY - textBlockHeight / 2 - padding;
-  const bgWidth = maxLineWidth + padding * 2;
-  const bgHeight = textBlockHeight + padding * 2;
-
   // Save context state
   ctx.save();
 
-  // Draw background with rounded corners (no shadow on background)
-  if (layer.showBackground && layer.backgroundColor && layer.backgroundColor !== 'transparent') {
-    ctx.fillStyle = layer.backgroundColor;
-    drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
-  }
+  // Draw each line with its own background (inline mode)
+  lines.forEach((line, index) => {
+    const lineY = centerY - (textBlockHeight / 2) + (index * lineHeight) + (lineHeight / 2);
+    const lineWidth = lineWidths[index];
+    
+    // Draw background for this line only
+    if (layer.showBackground && layer.backgroundColor && layer.backgroundColor !== 'transparent') {
+      ctx.fillStyle = layer.backgroundColor;
+      const bgX = x - lineWidth / 2 - padding;
+      const bgY = lineY - lineHeight / 2;
+      const bgWidth = lineWidth + padding * 2;
+      const bgHeight = lineHeight;
+      drawRoundedRect(ctx, bgX, bgY, bgWidth, bgHeight, borderRadius);
+    }
+  });
 
   // Apply shadow to text only
   if (layer.shadow?.enabled) {
