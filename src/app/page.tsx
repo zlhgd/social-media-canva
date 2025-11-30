@@ -130,8 +130,15 @@ export default function Home() {
         {!image ? (
           <ImageUploader onImageLoad={handleImageLoad} />
         ) : (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1, 
+            flexWrap: 'wrap',
+          }}>
+            <Box sx={{ 
+              flex: '1 1 500px', 
+              minWidth: { xs: '100%', md: '500px' },
+            }}>
               <Stack spacing={1}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Button
@@ -174,7 +181,10 @@ export default function Home() {
               </Stack>
             </Box>
 
-            <Box>
+            <Box sx={{ 
+              width: { xs: '100%', md: '500px' },
+              flexShrink: 0,
+            }}>
               <PreviewsPanel
                 image={image}
                 platforms={platforms}

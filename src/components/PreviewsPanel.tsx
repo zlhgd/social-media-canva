@@ -7,7 +7,6 @@ import { PlatformConfig, TextLayer } from '@/types';
 import { drawTextLayer, doesImageCoverCanvas, calculateExportDimensions } from '@/lib/canvas-utils';
 
 const PREVIEW_TEXT_ID = -1;
-const PREVIEW_WIDTH = 300;
 
 interface PreviewsPanelProps {
   image: HTMLImageElement;
@@ -30,6 +29,7 @@ function PlatformPreview({
   averageColor,
   previewText,
   exportDimensions,
+  containerWidth,
 }: {
   platform: PlatformConfig;
   image: HTMLImageElement;
@@ -40,6 +40,7 @@ function PlatformPreview({
   averageColor: string;
   previewText?: Omit<TextLayer, 'id'> | null;
   exportDimensions: { width: number; height: number };
+  containerWidth: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -47,15 +48,15 @@ function PlatformPreview({
     const aspectRatio = exportDimensions.width / exportDimensions.height;
     let displayWidth, displayHeight;
     if (aspectRatio >= 1) {
-      displayWidth = PREVIEW_WIDTH;
-      displayHeight = PREVIEW_WIDTH / aspectRatio;
+      displayWidth = containerWidth;
+      displayHeight = containerWidth / aspectRatio;
     } else {
-      displayHeight = PREVIEW_WIDTH;
-      displayWidth = PREVIEW_WIDTH * aspectRatio;
+      displayHeight = containerWidth;
+      displayWidth = containerWidth * aspectRatio;
     }
     const previewScale = displayWidth / exportDimensions.width;
     return { displayWidth, displayHeight, previewScale };
-  }, [exportDimensions]);
+  }, [exportDimensions, containerWidth]);
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -97,7 +98,7 @@ function PlatformPreview({
     render();
   }, [render]);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (!image) return;
 
     const canvas = document.createElement('canvas');
@@ -128,7 +129,7 @@ function PlatformPreview({
     link.download = `${platform.id}-${exportDimensions.width}x${exportDimensions.height}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-  };
+  }, [image, platform, textLayers, imageX, imageY, zoom, averageColor, exportDimensions]);
 
   return (
     <Card variant="outlined">
@@ -170,10 +171,25 @@ export default function PreviewsPanel({
   averageColor,
   previewText,
 }: PreviewsPanelProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = React.useState(468);
+
   const platformExportDimensions = useMemo(() => 
     calculateExportDimensions(image, platforms), 
     [platforms, image]
   );
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth - 32);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   const generateCanvasForPlatform = (platform: PlatformConfig): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
@@ -225,7 +241,7 @@ export default function PreviewsPanel({
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 1 }}>
+    <Card variant="outlined" sx={{ borderRadius: 1 }} ref={containerRef}>
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
           <Typography variant="body2">Aperçus</Typography>
@@ -256,6 +272,7 @@ export default function PreviewsPanel({
                 averageColor={averageColor}
                 previewText={previewText}
                 exportDimensions={dimensions}
+                containerWidth={containerWidth}
               />
             );
           })}
