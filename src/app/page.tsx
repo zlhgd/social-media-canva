@@ -4,15 +4,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import {
   Container,
   Box,
-  Button,
   Stack,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageUploader from '@/components/ImageUploader';
 import PlatformConfigPanel from '@/components/PlatformConfigPanel';

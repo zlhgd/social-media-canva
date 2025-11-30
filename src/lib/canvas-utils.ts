@@ -1,6 +1,6 @@
 import { TextLayer, PlatformConfig } from '@/types';
 
-const LINE_HEIGHT_MULTIPLIER = 1.2;
+const _LINE_HEIGHT_MULTIPLIER = 1.2;
 
 export function calculateExportDimensions(
   image: HTMLImageElement,

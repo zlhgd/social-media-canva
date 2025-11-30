@@ -37,6 +37,7 @@ This is a Next.js application for creating social media visuals optimized for In
 - Support both mouse and touch interactions
 - Each component should have stories in Storybook, with each prop demoed
 - Use as less as possible hardcoded style, prefer MUI theme variables. hex colors are forbidden
+- Components shouldn't have more than 250 lines, else split them
 
 ### Performance
 - Use `useCallback` and `useMemo` appropriately

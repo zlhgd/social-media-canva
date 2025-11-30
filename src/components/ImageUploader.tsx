@@ -6,7 +6,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 
 interface ImageUploaderProps {
-  onImageLoad: (image: HTMLImageElement) => void;
+  onImageLoad: (_image: HTMLImageElement) => void;
 }
 
 export default function ImageUploader({ onImageLoad }: ImageUploaderProps) {

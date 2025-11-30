@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
-import { Box, Card, CardContent, Stack, Button, ButtonGroup, Tooltip } from '@mui/material';
-import CropFreeIcon from '@mui/icons-material/CropFree';
-import AlignHorizontalCenterIcon from '@mui/icons-material/AlignHorizontalCenter';
-import AlignVerticalCenterIcon from '@mui/icons-material/AlignVerticalCenter';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Box, Card, CardContent, Stack } from '@mui/material';
 import { PlatformConfig } from '@/types';
 import { calculateExportDimensions } from '@/lib/canvas-utils';
+import CanvasControls from './CanvasControls';
 
 interface CanvasEditorProps {
   image: HTMLImageElement;
@@ -455,32 +452,12 @@ export default function CanvasEditor({
     <Card variant="outlined">
       <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
         <Stack spacing={1}>
-          <Stack direction="row" spacing={1} justifyContent="center">
-            <ButtonGroup size="small">
-              <Tooltip title="Réinitialiser">
-                <Button onClick={handleCoverMode}>
-                  <CropFreeIcon />
-                </Button>
-              </Tooltip>
-            </ButtonGroup>
-            <ButtonGroup size="small">
-              <Tooltip title="Centrer horizontalement">
-                <Button onClick={handleCenterH}>
-                  <AlignHorizontalCenterIcon />
-                </Button>
-              </Tooltip>
-              <Tooltip title="Centrer verticalement">
-                <Button onClick={handleCenterV}>
-                  <AlignVerticalCenterIcon />
-                </Button>
-              </Tooltip>
-            </ButtonGroup>
-            {onReplaceImage && (
-              <Button size="small" startIcon={<RefreshIcon />} onClick={onReplaceImage}>
-                Remplacer
-              </Button>
-            )}
-          </Stack>
+          <CanvasControls 
+            onCoverMode={handleCoverMode}
+            onCenterH={handleCenterH}
+            onCenterV={handleCenterV}
+            onReplaceImage={onReplaceImage}
+          />
 
           <Box
             ref={containerRef}
